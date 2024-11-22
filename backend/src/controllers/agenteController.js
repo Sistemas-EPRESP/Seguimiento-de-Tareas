@@ -1,4 +1,6 @@
-const Agente = require('../models/Agente');
+const Agente = require('../models/Agente'); // Importar modelos
+const Usuario = require('../models/Usuario')
+const bcrypt = require('bcrypt');
 
 // Obtener todos los agentes
 exports.getAllAgentes = async (req, res) => {
@@ -10,14 +12,32 @@ exports.getAllAgentes = async (req, res) => {
   }
 };
 
-// Crear un nuevo agente
 exports.createAgente = async (req, res) => {
-  const { nombre, apellido } = req.body;
+  const { nombre, apellido, rol, password } = req.body;
+
   try {
+    // Crear nuevo agente
     const nuevoAgente = await Agente.create({ nombre, apellido });
-    res.status(201).json(nuevoAgente);
+
+    // Encriptar la contraseña
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Crear el usuario asociado al agente
+    const nuevoUsuario = await Usuario.create({
+      rol: rol || 'Personal',  // Establecer un rol por defecto si no se proporciona
+      password: hashedPassword,
+      agenteId: nuevoAgente.id, // Relacionar con el agente creado
+    });
+
+    // Responder con el nuevo agente y usuario
+    res.status(201).json({
+      message: 'Agente y usuario creados con éxito',
+      agente: nuevoAgente,
+      usuario: nuevoUsuario,
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Error al crear el agente' });
+    console.error('Error al crear el agente y usuario:', error);
+    res.status(500).json({ error: 'Error al crear el agente y usuario' });
   }
 };
 

@@ -2,13 +2,13 @@ const sequelize = require('../config/database');
 const { DataTypes } = require('sequelize');
 
 const Revision = sequelize.define('Revision', {
-  descripcion: {
-    type: DataTypes.TEXT,
-    allowNull: false,
-  },
   fecha_hora: {
     type: DataTypes.DATE,
     allowNull: false,
+  },
+  estado: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,  // Corrección no realizada por defecto
   },
   tareaId: {
     type: DataTypes.INTEGER,

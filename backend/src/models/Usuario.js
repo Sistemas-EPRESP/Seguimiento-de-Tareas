@@ -6,12 +6,17 @@ const Usuario = sequelize.define('Usuario', {
     type: DataTypes.ENUM('Administrador', 'Personal', 'Desarrollador'),
     allowNull: false,
   },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   agenteId: {
     type: DataTypes.INTEGER,
     references: {
-      model: 'Agentes',  // Nombre de la tabla en la base de datos
+      model: 'Agentes',
       key: 'id',
     },
+    allowNull: false,
   },
 });
 

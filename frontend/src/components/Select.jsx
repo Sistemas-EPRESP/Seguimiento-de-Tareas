@@ -4,6 +4,7 @@ export default function Select({
   label,
   opciones,
   onChange,
+  placeHolder,
   defaultValue = "",
   labelClassName = "", // Clases personalizadas para el label
   selectClassName = "", // Clases personalizadas para el select
@@ -17,19 +18,26 @@ export default function Select({
   };
 
   return (
-    <div className="flex space-x-2 items-center">
-      <label className={labelClassName}>{label}</label>
+    <div className="">
+      {label ?? <label className={labelClassName}>{label}</label>}
+
       <select
         value={selectedOption}
         onChange={handleChange}
         className={selectClassName}
       >
-        <option value="">Todos</option>
-        {opciones.map((opcion) => (
-          <option key={opcion} value={opcion}>
-            {opcion}
-          </option>
-        ))}
+        <option value="">{placeHolder}</option>
+        {opciones.map((opcion) =>
+          typeof opcion === "string" ? (
+            <option key={opcion} value={opcion}>
+              {opcion}
+            </option>
+          ) : (
+            <option key={opcion.value} value={opcion.value}>
+              {opcion.label}
+            </option>
+          )
+        )}
       </select>
     </div>
   );

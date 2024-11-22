@@ -1,29 +1,32 @@
-import { format, parse } from "date-fns";
+import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import { useNavigate } from "react-router-dom";
 
 export default function TareaCard({ tarea }) {
+  const navigate = useNavigate();
+
   const priorityColor = {
-    Alta: "bg-red-500 text-red-900", // Color más intenso
-    Media: "bg-yellow-500 text-yellow-900", // Color más intenso
-    Baja: "bg-green-500 text-green-900", // Color más intenso
-    Periódica: "bg-blue-500 text-blue-900", // Color más intenso
+    Alta: "bg-[#EF4444] text-white",
+    Media: "bg-[#F59E0B] text-black",
+    Baja: "bg-[#10B981] text-white",
+    Periódica: "bg-[#3B82F6] text-white",
   };
 
   const statusColor = {
-    "Sin comenzar": "bg-gray-100 text-gray-800",
-    "En curso": "bg-blue-100 text-blue-800",
+    "Sin comenzar": "bg-[#64748B] text-white",
+    "En curso": "bg-purple-500 text-white",
     Bloqueado: "bg-red-100 text-red-800",
-    Completado: "bg-green-100 text-green-800",
-    "En revisión": "bg-purple-100 text-purple-800",
-  };
-
-  // Función para parsear la fecha en formato "dd-MM-yy"
-  const parseDate = (dateString) => {
-    return parse(dateString, "dd-MM-yy", new Date());
+    Completa: "bg-[#10B981] text-white",
+    "En revisión": "bg-[#F59E0B] text-black",
   };
 
   return (
-    <div className="mb-4 bg-gray-800 text-gray-100 rounded-lg shadow-lg p-4 hover:cursor-pointer">
+    <div
+      className="mb-4 bg-gray-800 text-gray-100 rounded-lg shadow-lg p-4 hover:cursor-pointer"
+      onClick={() => navigate(`/tarea/${tarea.id}`)} // Navegar a la página de detalles al hacer clic
+    >
       <div className="flex justify-between items-start">
         <h2 className="text-xl font-semibold">{tarea.nombre}</h2>
         <div className="flex space-x-2">
@@ -43,18 +46,49 @@ export default function TareaCard({ tarea }) {
           </span>
         </div>
       </div>
-      <p className="text-sm text-gray-300 mt-2 mb-2">{tarea.descripcion}</p>
-      <div className="text-sm text-gray-300 mb-2">Agente: {tarea.agente}</div>
-      <div className="flex justify-between text-xs text-gray-500">
-        <span>
-          Inicio:{" "}
-          {format(parseDate(tarea.fecha_inicio), "dd MMM yyyy", { locale: es })}
+      <p className="text-sm text-gray-300 mt-2 mb-7">{tarea.descripcion}</p>
+      <div className="flex text-sm items-center text-gray-300 mb-2 gap-3">
+        <PersonOutlineIcon className="text-[#94A3B8]" />
+        {tarea.Agentes && tarea.Agentes.length > 0
+          ? tarea.Agentes.map((agente, index) => (
+              <span
+                className="rounded-full border-[0.5px] text-[#E2E8F0] border-[#64748B] px-3 py-1 bg-[#334155]"
+                key={index}
+              >
+                {agente.nombre} {agente.apellido}
+              </span>
+            ))
+          : ""}
+      </div>
+      <div className="flex justify-between text-xs pt-1 text-[#94A3B8]">
+        <span className="flex items-center">
+          <CalendarTodayIcon style={{ width: "20px" }} />
+          <span className="ml-2 text-sm">
+            {tarea.fecha_inicio
+              ? format(
+                  new Date(tarea.fecha_inicio),
+                  "EEEE, d 'de' MMMM 'de' yyyy",
+                  {
+                    locale: es,
+                  }
+                )
+              : "Fecha no disponible"}
+          </span>
         </span>
-        <span>
-          Vencimiento:{" "}
-          {format(parseDate(tarea.fecha_vencimiento), "dd MMM yyyy", {
-            locale: es,
-          })}
+
+        <span className="flex items-center">
+          <CalendarTodayIcon style={{ width: "20px" }} />
+          <span className="ml-2 text-sm">
+            {tarea.fecha_vencimiento
+              ? format(
+                  new Date(tarea.fecha_vencimiento),
+                  "EEEE, d 'de' MMMM 'de' yyyy",
+                  {
+                    locale: es,
+                  }
+                )
+              : "Fecha no disponible"}
+          </span>
         </span>
       </div>
     </div>

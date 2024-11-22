@@ -10,6 +10,14 @@ const Tarea = sequelize.define('Tarea', {
     type: DataTypes.DATE,
     allowNull: false,
   },
+  fecha_de_entrega: {
+    type: DataTypes.DATE,
+    allowNull: false,
+  },
+  fecha_limite: {
+    type: DataTypes.DATE,
+    allowNull: false,
+  },
   fecha_vencimiento: {
     type: DataTypes.DATE,
     allowNull: false,
@@ -22,11 +30,11 @@ const Tarea = sequelize.define('Tarea', {
     allowNull: false,
   },
   prioridad: {
-    type: DataTypes.ENUM('alta', 'media', 'baja', 'periódica'),
+    type: DataTypes.ENUM('Alta', 'Media', 'Baja', 'Periódica'),
     allowNull: false,
   },
   estado: {
-    type: DataTypes.ENUM('Sin comenzar', 'En curso', 'Bloqueado', 'Completado', 'En revisión'),
+    type: DataTypes.ENUM('Sin comenzar', 'Curso', 'Revisión', 'Confirmación de revisión', 'Corrección', 'Bloqueada', 'Finalizado'),
     allowNull: false,
   },
 });

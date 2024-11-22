@@ -1,51 +1,54 @@
-import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useCallback, useContext } from "react";
 import { isToday, isThisWeek } from "date-fns";
-import TareaCard from "../components/TareaCard";
-import Filtro from "../layout/Filtro";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import Filtro from "../layout/Filtro.jsx";
 import axios from "axios";
-import config from "../api/config.js"; // Importa la configuración de la API
+import config from "../api/config.js";
+import { AuthContext } from "../context/AuthContext";
+import Loading from "../layout/Loading.jsx";
+import TareaCard from "../components/TareaCard.jsx";
 
 export default function Inicio() {
-  const navigate = useNavigate();
-
-  const [tareas, setTareas] = useState([]);
+  const { usuario } = useContext(AuthContext);
   const [todayTasks, setTodayTasks] = useState([]);
   const [weekTasks, setWeekTasks] = useState([]);
   const [prioridadFiltro, setPrioridadFiltro] = useState("");
-  const [agenteFiltro, setAgenteFiltro] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("");
-
-  const obtenerTareas = async () => {
-    const today = new Date();
-    const oneWeekFromNow = new Date(today);
-    oneWeekFromNow.setDate(today.getDate() + 7);
-
-    try {
-      const { data } = await axios.get(`${config.apiUrl}/tareas/fecha`, {
-        params: {
-          fechaInicio: today.toISOString().split("T")[0],
-          fechaFin: oneWeekFromNow.toISOString().split("T")[0],
-        },
-      });
-
-      setTareas(data);
-    } catch (error) {
-      console.error("Error al obtener las tareas", error);
-    }
-  };
+  const [tareas, setTareas] = useState([]);
+  const [cargando, setCargando] = useState(false);
 
   const filtrarTareas = useCallback(
     (tarea) => {
       return (
         (!prioridadFiltro || tarea.prioridad === prioridadFiltro) &&
-        (!agenteFiltro || tarea.agente === agenteFiltro) &&
         (!estadoFiltro || tarea.estado === estadoFiltro)
       );
     },
-    [prioridadFiltro, agenteFiltro, estadoFiltro]
+    [prioridadFiltro, estadoFiltro]
   );
+
+  useState(async () => {
+    setCargando(true);
+    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
+
+    try {
+      const { data } = await axios.get(
+        `${config.apiUrl}/tareas/incompletas/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setTareas(data);
+      //setError(null);
+    } catch (error) {
+      console.error("Error al obtener las tareas", error);
+      //setError("Error al cargar las tareas. Por favor, intente de nuevo.");
+    } finally {
+      setCargando(false);
+    }
+  }, [usuario.agente.id]);
 
   useEffect(() => {
     const tareasHoy = tareas.filter(
@@ -63,69 +66,68 @@ export default function Inicio() {
     setWeekTasks(tareasSemana);
   }, [tareas, filtrarTareas]);
 
-  useEffect(() => {
-    obtenerTareas();
-  }, []);
-
   return (
-    <div className="min-h-screen p-6 bg-gray-700 text-gray-100 relative">
-      <div className="flex justify-end space-x-4 mb-6">
-        <Filtro
-          label="Prioridad"
-          opciones={["Alta", "Media", "Baja", "Periódica"]}
-          onChange={(value) => setPrioridadFiltro(value)}
-          labelClassName="block text-sm font-medium mb-1 text-gray-100"
-          selectClassName="w-full px-3 py-2 bg-gray-800 text-gray-100 rounded-lg focus:outline-none"
-        />
-        <Filtro
-          label="Agente"
-          opciones={[...new Set(tareas.map((tarea) => tarea.agente))]}
-          onChange={(value) => setAgenteFiltro(value)}
-          labelClassName="block text-sm font-medium mb-1 text-gray-100"
-          selectClassName="w-full px-3 py-2 bg-gray-800 text-gray-100 rounded-lg focus:outline-none"
-        />
-        <Filtro
-          label="Estado"
-          opciones={[
-            "Sin comenzar",
-            "En curso",
-            "Bloqueado",
-            "Completado",
-            "En revisión",
-          ]}
-          onChange={(value) => setEstadoFiltro(value)}
-          labelClassName="block text-sm font-medium mb-1 text-gray-100"
-          selectClassName="w-full px-3 py-2 bg-gray-800 text-gray-100 rounded-lg focus:outline-none"
-        />
-      </div>
-
-      <h1 className="text-3xl mb-6">Tareas para Hoy</h1>
-      <ul className="mb-8">
-        {todayTasks.length > 0 ? (
-          todayTasks.map((tarea) => <TareaCard key={tarea.id} tarea={tarea} />)
-        ) : (
-          <p>No hay tareas para hoy.</p>
-        )}
-      </ul>
-
-      <h1 className="text-3xl mb-6">Tareas para esta Semana</h1>
-      <ul>
-        {weekTasks.length > 0 ? (
-          weekTasks.map((tarea) => <TareaCard key={tarea.id} tarea={tarea} />)
-        ) : (
-          <p>No hay tareas para esta semana.</p>
-        )}
-      </ul>
-
-      <button
-        onClick={() => navigate("/crear-tarea")}
-        className="fixed bottom-8 right-8 bg-blue-600 text-white rounded-2xl px-4 py-3 shadow-lg hover:bg-blue-700 transition-colors"
-      >
-        <div className="flex items-center">
-          <AddCircleOutlineIcon />
-          <span className="ml-2">Crear Tarea</span>
+    <div className="container mx-auto px-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-2 border-b-slate-500 mb-4 pb-4">
+        <h1 className="text-3xl font-semibold mb-4 md:mb-0">
+          Hola {usuario?.agente?.nombre} {usuario?.agente?.apellido}!
+        </h1>
+        <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
+          <h2 className="flex items-center">Filtrar por: </h2>
+          <Filtro
+            opciones={["Alta", "Media", "Baja", "Periódica"]}
+            onChange={(value) => setPrioridadFiltro(value)}
+            placeHolder={"Prioridad"}
+            labelClassName=""
+            selectClassName="w-full px-3 py-2 bg-gray-800 text-white rounded-lg focus:outline-none"
+          />
+          <Filtro
+            opciones={[
+              "Sin comenzar",
+              "En curso",
+              "Bloqueado",
+              "Completa",
+              "En revisión",
+            ]}
+            placeHolder={"Estado"}
+            onChange={(value) => setEstadoFiltro(value)}
+            selectClassName="w-full px-3 py-2 bg-gray-800 text-gray-100 rounded-lg focus:outline-none"
+          />
         </div>
-      </button>
+      </div>
+      {cargando ? (
+        <Loading />
+      ) : (
+        <div>
+          <h2 className="text-2xl font-semibold mb-4">Tareas para Hoy</h2>
+          {todayTasks.length > 0 ? (
+            <ul className="space-y-4 mb-8">
+              {todayTasks.map((tarea) => (
+                <li key={tarea.id}>
+                  <TareaCard tarea={tarea} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500 mb-8">No hay tareas para hoy.</p>
+          )}
+
+          <h2 className="text-2xl font-semibold mb-4">
+            Tareas para esta Semana
+          </h2>
+          {weekTasks.length > 0 ? (
+            <ul className="space-y-4">
+              {weekTasks.map((tarea) => (
+                <li key={tarea.id}>
+                  <TareaCard tarea={tarea} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500">No hay tareas para esta semana.</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

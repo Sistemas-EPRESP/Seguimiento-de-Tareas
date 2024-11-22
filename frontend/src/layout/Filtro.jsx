@@ -4,6 +4,7 @@ export default function Filtro({
   label,
   opciones,
   onChange,
+  placeHolder,
   labelClassName,
   selectClassName,
 }) {
@@ -13,6 +14,7 @@ export default function Filtro({
         label={label}
         opciones={opciones}
         onChange={onChange}
+        placeHolder={placeHolder}
         labelClassName={labelClassName}
         selectClassName={selectClassName}
       />

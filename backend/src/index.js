@@ -1,28 +1,35 @@
 const express = require('express');
 const sequelize = require('./config/database');
-const agenteRoutes = require('./routes/agenteRoutes'); // Asegúrate de que la ruta esté importada
-const tareasRoutes = require('./routes/tareaRoutes')
-const revisionRoutes = require('./routes/revisionRoutes')
-const cors = require('cors'); // Importa el middleware cors
-require('./models/associations'); // Asegúrate de que esto se ejecute para cargar las asociaciones
+const agenteRoutes = require('./routes/agenteRoutes');
+const tareasRoutes = require('./routes/tareaRoutes');
+const revisionRoutes = require('./routes/revisionRoutes');
+const authRoutes = require('./routes/authRoutes');
+const correccionesRoutes = require('./routes/correccionesRoutes');
+const cors = require('cors');
+const authenticateToken = require('./middlewares/authMiddleware'); // Importa el middleware de autenticación
+require('./models/associations'); // Asegúrate de que las asociaciones se carguen
 
 // Crea una instancia de Express
 const app = express();
 
 // Middleware para manejar JSON
 app.use(express.json());
+
+// Configuración de CORS
 app.use(cors({
-  origin: 'http://localhost:5173', // Permite solicitudes desde esta URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos permitidos
-  allowedHeaders: ['Content-Type'], // Encabezados permitidos
+  origin: '*', // Permitir solicitudes desde cualquier origen
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  //allowedHeaders: ['Content-Type', 'Authorization'], // Asegúrate de permitir el encabezado de autorización
 }));
 
-// Importa las rutas. Ahora todas las rutas estarán prefijadas con /api
-app.use('/api', tareasRoutes);
-app.use('/api', agenteRoutes);
-app.use('/api', revisionRoutes);
+// Rutas sin protección
+app.use('/api', authRoutes); // Rutas de autenticación (login) no protegidas
 
-
+// Rutas protegidas con middleware de autenticación
+app.use('/api', authenticateToken, tareasRoutes);
+app.use('/api', authenticateToken, agenteRoutes);
+app.use('/api', authenticateToken, revisionRoutes);
+app.use('/api', authenticateToken, correccionesRoutes);
 
 // Sincronización de la base de datos
 sequelize.sync({ alter: true })
