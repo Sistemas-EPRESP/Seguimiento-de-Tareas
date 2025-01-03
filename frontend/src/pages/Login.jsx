@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import config from "../api/config.js"; // Importa la configuración de la API
 import { AuthContext } from "../context/AuthContext";
@@ -9,9 +9,9 @@ import ModalInformativo from "../layout/ModalInformativo.jsx";
 const Login = () => {
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false); // Recordar usuario y contraseña
   const [cargando, setCargando] = useState(false);
   const { setUsuario } = useContext(AuthContext); // Para establecer el usuario logueado
-  const [error, setError] = useState(null);
   const [modalInfo, setModalInfo] = useState({
     tipo: "",
     visible: false,
@@ -20,6 +20,20 @@ const Login = () => {
   });
   const [modalVisible, setModalVisible] = useState(false); // Controla la visibilidad del modal
   const navigate = useNavigate();
+
+  // Cargar nombre completo y contraseña almacenados al cargar la página
+  useEffect(() => {
+    const rememberedUser = localStorage.getItem("rememberedUser");
+    const rememberedPassword = localStorage.getItem("rememberedPassword");
+
+    if (rememberedUser) {
+      setNombreCompleto(rememberedUser);
+      setRememberMe(true);
+    }
+    if (rememberedPassword) {
+      setPassword(rememberedPassword); // Cargar la contraseña directamente
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     setCargando(true);
@@ -34,8 +48,19 @@ const Login = () => {
         apellido,
         password,
       }); // Enviar datos de login al backend
+
       localStorage.setItem("token", data.token); // El token devuelto desde el backend
       localStorage.setItem("userId", data.agente.id);
+
+      // Guardar usuario y contraseña si se seleccionó "Recordarme"
+      if (rememberMe) {
+        localStorage.setItem("rememberedUser", nombreCompleto);
+        localStorage.setItem("rememberedPassword", password); // Almacenar la contraseña sin encriptar
+      } else {
+        localStorage.removeItem("rememberedUser");
+        localStorage.removeItem("rememberedPassword");
+      }
+
       setUsuario(data); // Guardar al usuario en el contexto
       setCargando(false);
       navigate("/"); // Redirigir a la página principal o a donde desees
@@ -45,7 +70,7 @@ const Login = () => {
       setModalInfo({
         tipo: "Error",
         titulo: "Error al iniciar sesión",
-        mensaje: "No se obtuvo una respuesta del servidor, intente mas tarde.",
+        mensaje: "No se obtuvo una respuesta del servidor, intente más tarde.",
       });
     }
   };
@@ -58,7 +83,7 @@ const Login = () => {
           <div className="grid gap-1">
             <label>Nombre y Apellido</label>
             <input
-              type="nombre"
+              type="text"
               value={nombreCompleto}
               onChange={(e) => setNombreCompleto(e.target.value)}
               required
@@ -75,7 +100,16 @@ const Login = () => {
               className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
             />
           </div>
-          {error && <p className="text-red-500">{error}</p>}
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="rememberMe"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="mr-2"
+            />
+            <label htmlFor="rememberMe">Recordarme</label>
+          </div>
           <button
             type="submit"
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"

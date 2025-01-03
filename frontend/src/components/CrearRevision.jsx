@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import Modal from "../layout/Modal";
 import Select from "./Select";
 import CloseIcon from "@mui/icons-material/Close";
@@ -8,6 +9,7 @@ import ModalInformativo from "../layout/ModalInformativo";
 import Loading from "../layout/Loading";
 
 export default function CrearRevision({ tareaId, onClose, onRevisionCreada }) {
+  const { id } = useParams();
   const [correcciones, setCorrecciones] = useState([]);
   const [modalInfo, setModalInfo] = useState({
     tipo: "",
@@ -29,6 +31,7 @@ export default function CrearRevision({ tareaId, onClose, onRevisionCreada }) {
         ...prevCorrecciones,
         correccionSeleccionada,
       ]);
+      console.log(correcciones);
     }
   };
 
@@ -58,6 +61,30 @@ export default function CrearRevision({ tareaId, onClose, onRevisionCreada }) {
           },
         }
       );
+      const estado = { estado: "Corrección" };
+      const { data } = await axios.put(
+        `${config.apiUrl}/tareas/${id}/cambiarEstado`,
+        estado,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const historial = {
+        tipo: "Correccion",
+        descripcion:
+          "La tarea ha sido corregida y entregada al agente para su revisión",
+      };
+      const resp = await axios.post(
+        `${config.apiUrl}/tareas/${id}/historial`,
+        historial,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setModalInfo({
         tipo: "Exito",
         titulo: "Revisión Creada!",
@@ -70,15 +97,10 @@ export default function CrearRevision({ tareaId, onClose, onRevisionCreada }) {
         mensaje: "Ocurrió un error inesperado al crear la revisón",
       });
     } finally {
-      await sleep(2000);
       setLoadingOpen(false);
       setModalVisible(true);
     }
   };
-
-  function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
 
   return (
     <Modal onClose={onClose} onConfirm={handleGuardarRevision}>

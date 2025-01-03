@@ -26,10 +26,15 @@ app.use(cors({
 app.use('/api', authRoutes); // Rutas de autenticación (login) no protegidas
 
 // Rutas protegidas con middleware de autenticación
-app.use('/api', authenticateToken, tareasRoutes);
-app.use('/api', authenticateToken, agenteRoutes);
-app.use('/api', authenticateToken, revisionRoutes);
-app.use('/api', authenticateToken, correccionesRoutes);
+// app.use('/api', authenticateToken, tareasRoutes);
+// app.use('/api', authenticateToken, agenteRoutes);
+// app.use('/api', authenticateToken, revisionRoutes);
+// app.use('/api', authenticateToken, correccionesRoutes);
+
+app.use('/api', tareasRoutes);
+app.use('/api', agenteRoutes);
+app.use('/api', revisionRoutes);
+app.use('/api', correccionesRoutes);
 
 // Sincronización de la base de datos
 sequelize.sync({ alter: true })

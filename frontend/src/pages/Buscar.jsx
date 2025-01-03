@@ -124,10 +124,10 @@ export default function Tareas() {
           <Filtro
             opciones={[
               "Sin comenzar",
-              "En curso",
+              "Curso",
               "Bloqueado",
-              "Completa",
-              "En revisión",
+              "Revisión",
+              "Finalizado",
             ]}
             placeHolder={"Estado"}
             onChange={(value) => setEstadoFiltro(value)}

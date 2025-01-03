@@ -15,10 +15,6 @@ const Notificacion = sequelize.define('Notificacion', {
     defaultValue: 'Pendiente',
     allowNull: false,
   },
-  tipo: {
-    type: DataTypes.ENUM('SolicitudCambioEstado', 'Otra'),
-    allowNull: false,
-  },
 });
 
 module.exports = Notificacion;

@@ -2,7 +2,11 @@ const TareaView = require('../views/tareaView');
 const Tarea = require('../models/Tarea');
 const { Op } = require('sequelize');
 const Agente = require('../models/Agente')
+const HistorialMovimiento = require('../models/HistorialMovimiento');
+const TareaEstadoTiempo = require('../models/TareaEstadoTiempo');
 const moment = require('moment');
+const { toDate, getTimezoneOffset } = require('date-fns-tz');
+const { format, parseISO } = require('date-fns');
 
 // Obtener todas las tareas con agentes asociados
 exports.getAllTareas = async (req, res) => {
@@ -62,13 +66,18 @@ exports.createTarea = async (req, res) => {
 
   try {
     const nuevaTarea = await TareaView.createTareaConAgentes(tareaData, agentesIds);
+
+    await crearTiempoEstado(nuevaTarea.id, nuevaTarea.estado);
+    await registrarMovimiento(
+      nuevaTarea.id,
+      'Crear tarea',
+      `Tarea creada con estado inicial Sin Comenzar`
+    );
     res.status(201).json(nuevaTarea);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-
-
 
 // Actualizar una tarea
 exports.updateTarea = async (req, res) => {
@@ -79,6 +88,11 @@ exports.updateTarea = async (req, res) => {
     if (!tarea) {
       return res.status(404).json({ error: 'Tarea no encontrada' });
     }
+    // if (tareaData.estado !== tarea.estado) {
+    //   console.log("ENTREE");
+    //   this.cambiarEstados()
+    // }
+
     // Actualizar los datos de la tarea
     await tarea.update(tareaData);
 
@@ -148,15 +162,15 @@ exports.getTareaRevisiones = async (req, res) => {
 };
 
 exports.buscarTareas = async (req, res) => {
-  const query = req.query.q;
-  if (!query || query.trim() === "") {
-    return res.status(400).json({ error: "El parámetro de búsqueda no puede estar vacío" });
-  }
-  // Verificar si el query es una fecha válida
-  const isDate = moment(query, 'YYYY-MM-DD', true).isValid();
+  const query = req.query.q?.trim(); // Asegurar que el parámetro sea una cadena limpia
+  const isDate = query && moment(query, 'YYYY-MM-DD', true).isValid(); // Validar si es una fecha
 
   try {
-    const tareas = await TareaView.buscarTareas(query, isDate);
+    // Si no se envía ningún parámetro o está vacío, devolver todas las tareas
+    const tareas = query
+      ? await TareaView.buscarTareas(query, isDate)
+      : await TareaView.getAllTareasConAgentes();
+
     res.json(tareas);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -165,7 +179,8 @@ exports.buscarTareas = async (req, res) => {
 
 exports.getTareasIncompletas = async (req, res) => {
   try {
-    const agenteId = req.params.id; // Obtiene el ID del agente logueado desde req.params
+    const agenteId = req.query.idAgente; // Obtiene el ID del agente logueado desde req.params
+
     const tareasIncompletas = await TareaView.getTareasIncompletasPorAgente(agenteId);
 
     res.status(200).json(tareasIncompletas);
@@ -177,10 +192,9 @@ exports.getTareasIncompletas = async (req, res) => {
 
 exports.cambiarEstados = async (req, res) => {
   try {
-    const { estado } = req.body; // Obtener el nuevo estado desde el cuerpo de la solicitud
-    const { id } = req.params; // Obtener el id de la tarea desde los parámetros
+    const nuevoEstado = req.body.estado;
+    const { id } = req.params;
 
-    // Verificar que el estado sea válido
     const estadosValidos = [
       'Sin comenzar',
       'Curso',
@@ -191,22 +205,152 @@ exports.cambiarEstados = async (req, res) => {
       'Finalizado',
     ];
 
-    if (!estadosValidos.includes(estado)) {
+    if (!estadosValidos.includes(nuevoEstado)) {
       return res.status(400).json({ error: 'Estado no válido' });
     }
 
-    // Actualizar el estado de la tarea
-    const tarea = await Tarea.findByPk(id); // Buscar la tarea por ID
+    const tarea = await Tarea.findByPk(id);
     if (!tarea) {
       return res.status(404).json({ error: 'Tarea no encontrada' });
     }
 
-    tarea.estado = estado; // Cambiar el estado
-    await tarea.save(); // Guardar los cambios
+    const estadoAnterior = tarea.estado;
 
-    return res.status(200).json({ message: 'Estado actualizado con éxito', tarea });
+    const ultimaFechaEstado = await obtenerUltimaFechaEstado(id, estadoAnterior);
+
+
+    if (estadoAnterior !== 'Finalizado') {
+      await actualizarTiempoEstado(id, estadoAnterior, ultimaFechaEstado);
+    } else {
+      return 0;
+    }
+
+    // Registrar nueva entrada en el nuevo estado
+    const nuevoRegistro = await TareaEstadoTiempo.findOne({
+      where: { tareaId: id, estado: nuevoEstado },
+    });
+
+    if (nuevoRegistro) {
+      // Actualizamos la última entrada
+      nuevoRegistro.ultima_entrada = new Date();
+      await nuevoRegistro.save();
+    } else {
+      // Creamos un registro nuevo
+      await TareaEstadoTiempo.create({
+        tareaId: id,
+        estado: nuevoEstado,
+        ultima_entrada: new Date(),
+      });
+    }
+
+    // Cambiar estado en la tarea
+    tarea.estado = nuevoEstado;
+    await tarea.save();
+
+    // // Registrar movimiento
+    // await registrarMovimiento(
+    //   id,
+    //   'Cambio de estado',
+    //   `Cambio de estado de ${estadoAnterior} a ${nuevoEstado}`
+    // );
+
+    res.status(200).json(tarea);
+
   } catch (error) {
     console.error('Error al cambiar de estado:', error);
     return res.status(500).json({ error: 'Error al cambiar el estado de la tarea' });
   }
 };
+
+exports.crearHistorial = async (req, res) => {
+  const { id } = req.params;
+
+  const { tipo, descripcion } = req.body;
+  console.log(tipo, descripcion);
+
+  try {
+    const tarea = await Tarea.findByPk(id);
+    if (!tarea) {
+      return res.status(404).json({ error: 'Tarea no encontrada' });
+    }
+    await registrarMovimiento(id, tipo, descripcion);
+    res.status(201).json({ message: 'Historial creado correctamente' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+
+
+const obtenerUltimaFechaEstado = async (tareaId, estado) => {
+  const registro = await TareaEstadoTiempo.findOne({
+    where: { tareaId, estado },
+  });
+
+  if (!registro || !registro.ultima_entrada) return null;
+
+  // Convertir la fecha a la zona horaria de Argentina
+  const fechaArgentina = restarTresHoras(registro.ultima_entrada);
+
+  const fechaUTC = new Date(fechaArgentina);
+  return fechaUTC;
+};
+
+const restarTresHoras = (fechaISO) => {
+  const fecha = new Date(fechaISO);
+  fecha.setHours(fecha.getHours() - 3);
+  return fecha.toISOString();
+};
+
+const actualizarTiempoEstado = async (tareaId, estado, ultimaFechaEstado) => {
+  if (!ultimaFechaEstado) return;
+
+  const ahora = new Date();
+  const offsetArgentina = getTimezoneOffset('America/Argentina/Buenos_Aires', ahora);
+  const ahoraArgentina = new Date(ahora.getTime() + offsetArgentina);
+
+  const tiempoTranscurrido = Math.floor(
+    (ahoraArgentina.getTime() - ultimaFechaEstado.getTime()) / 1000
+  ); // Segundos
+
+  const registro = await TareaEstadoTiempo.findOne({
+    where: { tareaId, estado },
+  });
+
+  if (registro) {
+    registro.tiempo_acumulado += tiempoTranscurrido;
+    registro.ultima_entrada = null;
+    await registro.save();
+  }
+};
+
+/**
+ * Registrar un movimiento en el historial de una tarea.
+ * @param {number} tareaId - ID de la tarea.
+ * @param {string} tipo - Tipo de movimiento (e.g., 'Creación', 'Cambio de estado', 'Corrección', 'Actualización').
+ * @param {string} descripcion - Descripción detallada del movimiento.
+ */
+const registrarMovimiento = async (tareaId, tipo, descripcion) => {
+
+  try {
+    await HistorialMovimiento.create({
+      tareaId,
+      tipo,
+      descripcion,
+      fecha: new Date()
+    });
+
+  } catch (error) {
+    console.error("Error al registrar movimiento:", error);
+    throw error;
+  }
+};
+
+const crearTiempoEstado = async (idTarea, estado) => {
+  await TareaEstadoTiempo.create({
+    tareaId: idTarea,
+    estado: estado,
+    ultima_entrada: new Date(), // Fecha/hora actual como la entrada inicial
+    tiempo_acumulado: 0, // Tiempo acumulado inicial
+  });
+}

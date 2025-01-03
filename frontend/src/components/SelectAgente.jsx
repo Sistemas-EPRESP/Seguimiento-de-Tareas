@@ -1,16 +1,11 @@
-// SelectAgente.js
-const SelectAgente = ({ agentes, value, className, onChange }) => {
-  // Manejar la selección de un agente
+const SelectAgente = ({ agentes, className, onSelect }) => {
   const handleSelectChange = (e) => {
-    onChange(e.target.value); // Pasamos el ID del agente seleccionado
+    const idAgente = e.target.value;
+    onSelect(idAgente); // Llamamos a la función pasada como prop
   };
 
   return (
-    <select
-      value={value} // El valor seleccionado
-      onChange={handleSelectChange} // Evento de cambio
-      className={className}
-    >
+    <select onChange={handleSelectChange} className={className}>
       <option value="">Selecciona un agente</option>
       {agentes.map((agente) => (
         <option key={agente.id} value={agente.id}>

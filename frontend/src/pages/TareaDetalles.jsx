@@ -10,10 +10,13 @@ import AgenteSeleccionado from "../components/AgenteSeleccionado";
 import ModalInformativo from "../layout/ModalInformativo";
 import Loading from "../layout/Loading";
 import { format } from "date-fns";
+import ModalNotificacion from "../layout/ModalNotificacion";
+import TareaHistorial from "../components/TareaHistorial";
 
 export default function TareaDetalles() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [notificacionPendiente, setNotificacionPendiente] = useState(false);
 
   const [modalInfo, setModalInfo] = useState({
     tipo: "",
@@ -37,7 +40,7 @@ export default function TareaDetalles() {
     agentesSeleccionados: [],
   });
   const [todosAgentes, setTodosAgentes] = useState([]);
-
+  const [cargando, setCargando] = useState(false);
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -60,12 +63,16 @@ export default function TareaDetalles() {
           fecha_vencimiento: new Date(data.fecha_vencimiento),
           agentesSeleccionados: data.Agentes || [],
         });
-        console.log(tarea.Revisions);
+
+        // Verificar notificaciones pendientes
+        if (data.Notificacions?.some((n) => n.estado === "Pendiente")) {
+          setNotificacionPendiente(true);
+        }
+        console.log(data);
       } catch (error) {
         console.error("Error al obtener los detalles de la tarea", error);
       }
     };
-
     const obtenerAgentes = async () => {
       try {
         const { data } = await axios.get(`${config.apiUrl}/agentes`, {
@@ -123,7 +130,6 @@ export default function TareaDetalles() {
         mensaje: "Ocurrió un error inesperado al actualizar la tarea",
       });
     } finally {
-      await sleep(2000);
       setLoadingOpen(false);
       setModalVisible(true);
     }
@@ -149,11 +155,9 @@ export default function TareaDetalles() {
         mensaje: "Ocurrió un error inesperado al eliminar la tarea",
       });
     } finally {
-      await sleep(2000);
       setLoadingOpen(false);
       setModalVisible(true);
       setTareaEliminada(true);
-      await sleep(2000);
       //navigate("/");
     }
   };
@@ -167,6 +171,13 @@ export default function TareaDetalles() {
     if (tareaEliminada) {
       navigate("/"); // Redirigir al inicio si la tarea fue eliminada
     }
+  };
+
+  const handleDateChange = (name, date) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: date,
+    }));
   };
 
   const handleChange = (e, name, value) => {
@@ -222,16 +233,119 @@ export default function TareaDetalles() {
     );
   };
 
-  if (!tarea || !todosAgentes.length) {
-    return <p>Cargando detalles de la tarea...</p>;
-  }
+  const finalizarTarea = async (e) => {
+    e.preventDefault();
+    setLoadingOpen(true);
+    const estado = { estado: "Finalizado" };
+    try {
+      const { data } = await axios.put(
+        `${config.apiUrl}/tareas/${id}/cambiarEstado`,
+        estado,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const historial = {
+        tipo: "Finalización",
+        descripcion: "La tarea ha sido finalizada",
+      };
+      const resp2 = await axios.post(
+        `${config.apiUrl}/tareas/${id}/historial`,
+        historial,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setTarea((prevTarea) => ({
+        ...prevTarea,
+        estado: data.tarea.estado,
+      }));
+      setModalInfo({
+        tipo: "Exito",
+        titulo: "Operación exitosa",
+        mensaje: "La tarea ha sido finalizada",
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingOpen(false);
+      setModalVisible(true);
+    }
+  };
+
+  const confirmarEntrega = async () => {
+    const estado = { estado: "Revisión" };
+    const notificacion = {
+      idNotificacion: tarea.Notificacions[0].id,
+      estado: "Aceptada",
+    };
+    try {
+      const { data } = await axios.put(
+        `${config.apiUrl}/tareas/${id}/cambiarEstado`,
+        estado,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const resp = await axios.put(
+        `${config.apiUrl}/tareas/${id}/confirmarNotificacion`,
+        notificacion,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const historial = {
+        tipo: "Revisión",
+        descripcion: "La tarea se encuentra en proceso de revisión",
+      };
+      const resp2 = await axios.post(
+        `${config.apiUrl}/tareas/${id}/historial`,
+        historial,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      // Actualiza el estado de la tarea directamente con la respuesta
+      setTarea((prevTarea) => ({
+        ...prevTarea,
+        ...data, // Mezcla todos los datos nuevos en el estado actual
+      }));
+      setModalInfo({
+        tipo: "Exito",
+        titulo: "Operación exitosa",
+        mensaje: "Se confirmó la entrega de la tarea!",
+      });
+    } catch (error) {
+      console.error(error);
+      setModalInfo({
+        tipo: "Error",
+        titulo: "Error de servidor",
+        mensaje: "No se pudo completar esta acción!",
+      });
+    } finally {
+      setNotificacionPendiente(false);
+      setCargando(false);
+      setModalVisible(true);
+    }
+  };
 
   return (
     <div className="">
       <div className="flex gap-5">
         <div
           id="MODIFICAR TAREA"
-          className="bg-gray-500 p-4 rounded-xl text-gray-100 w-[65%]"
+          className="bg-gray-800 p-4 rounded-xl text-gray-100 w-[65%]"
         >
           <h1 className="text-3xl font-semibold mb-4">Modificar Tarea</h1>
           <form onSubmit={modificarTarea} className="grid grid-cols-2 gap-4">
@@ -269,7 +383,7 @@ export default function TareaDetalles() {
               </label>
               <DatePicker
                 selected={formData.fecha_inicio}
-                onChange={(date) => handleChange("fecha_inicio", date)}
+                onChange={(date) => handleDateChange("fecha_inicio", date)}
                 showTimeSelect
                 timeFormat="HH:mm"
                 timeIntervals={15}
@@ -286,7 +400,7 @@ export default function TareaDetalles() {
               </label>
               <DatePicker
                 selected={formData.fecha_de_entrega}
-                onChange={(date) => handleChange("fecha_de_entrega", date)}
+                onChange={(date) => handleDateChange("fecha_de_entrega", date)}
                 showTimeSelect
                 timeFormat="HH:mm"
                 timeIntervals={15}
@@ -304,7 +418,7 @@ export default function TareaDetalles() {
               </label>
               <DatePicker
                 selected={formData.fecha_limite}
-                onChange={(date) => handleChange("fecha_limite", date)}
+                onChange={(date) => handleDateChange("fecha_limite", date)}
                 showTimeSelect
                 timeFormat="HH:mm"
                 timeIntervals={15}
@@ -321,7 +435,7 @@ export default function TareaDetalles() {
               </label>
               <DatePicker
                 selected={formData.fecha_vencimiento}
-                onChange={(date) => handleChange("fecha_vencimiento", date)}
+                onChange={(date) => handleDateChange("fecha_vencimiento", date)}
                 showTimeSelect
                 timeFormat="HH:mm"
                 timeIntervals={15}
@@ -343,6 +457,7 @@ export default function TareaDetalles() {
                 <option value="">Seleccionar estado</option>
                 <option value="Sin comenzar">Sin comenzar</option>
                 <option value="Curso">Curso</option>
+                <option value="Corrección">Corrección</option>
                 <option value="Bloqueado">Bloqueado</option>
                 <option value="Finalizado">Finalizado</option>
                 <option value="Revisión">Revisión</option>
@@ -376,8 +491,8 @@ export default function TareaDetalles() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-500 ">
-                Descripción:
+              <label className="block text-sm font-medium mb-2 text-gray-100 ">
+                Agentes seleccionados:
               </label>
               <div
                 id="Mostrar agentes"
@@ -400,13 +515,13 @@ export default function TareaDetalles() {
                 </div>
               </div>
             </div>
-            <button className="bg-green-500 w-full rounded-xl py-2 px-4 hover:bg-green-600">
+            <button
+              className="bg-green-500 w-full rounded-xl py-2 px-4 hover:bg-green-600"
+              onClick={(e) => finalizarTarea(e)}
+            >
               Finalizado
             </button>
             <div className="flex gap-4 col-start-2">
-              <button className="bg-yellow-600 w-full rounded-xl py-2 px-4 hover:bg-yellow-700">
-                Revisado
-              </button>
               <button
                 type="submit"
                 className="bg-blue-500 w-full rounded-xl py-2 px-4 hover:bg-blue-600"
@@ -423,11 +538,17 @@ export default function TareaDetalles() {
             </div>
           </form>
         </div>
-        <Revisiones tareaId={id} revisiones={tarea.Revisions} />
+        {tarea && (
+          <Revisiones tareaId={id} tarea={tarea} revisiones={tarea.Revisions} />
+        )}
       </div>
-      <div>
-        <p>Historial</p>
-      </div>
+      {tarea && (
+        <TareaHistorial
+          historial={tarea.HistorialMovimientos}
+          tiempos={tarea.TareaEstadoTiempos}
+          estadoActual={tarea.estado}
+        />
+      )}
       {modalVisible && (
         <ModalInformativo
           modalInfo={modalInfo}
@@ -435,6 +556,13 @@ export default function TareaDetalles() {
         />
       )}
       {loadingOpen && <Loading />}
+      {notificacionPendiente && (
+        <ModalNotificacion
+          visible={notificacionPendiente}
+          onConfirm={confirmarEntrega}
+          onCancel={() => setNotificacionPendiente(false)}
+        />
+      )}
     </div>
   );
 }

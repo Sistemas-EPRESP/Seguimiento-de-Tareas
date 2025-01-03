@@ -28,7 +28,7 @@ export default function Revisiones({ tareaId, revisiones }) {
 
   return (
     <div id="REVISIONES" className="flex flex-col gap-4 w-1/3">
-      <div className="flex flex-col justify-between bg-gray-500 rounded-xl p-4">
+      <div className="flex flex-col justify-between bg-gray-800 rounded-xl p-4">
         <h2 className="text-3xl font-bold mb-2">Revisiones</h2>
         <div className="max-h-[350px] overflow-y-auto pr-2">
           {listaRevisiones.length > 0 ? (

@@ -1,16 +1,17 @@
 import { useEffect, useState, useCallback, useContext } from "react";
-import { isToday, isThisWeek } from "date-fns";
+import { isToday, isThisWeek, parseISO, isFuture, addDays } from "date-fns";
 import Filtro from "../layout/Filtro.jsx";
 import axios from "axios";
 import config from "../api/config.js";
 import { AuthContext } from "../context/AuthContext";
 import Loading from "../layout/Loading.jsx";
-import TareaCard from "../components/TareaCard.jsx";
+import TareaCardAgente from "../components/TareaCardAgente.jsx";
 
 export default function Inicio() {
   const { usuario } = useContext(AuthContext);
   const [todayTasks, setTodayTasks] = useState([]);
   const [weekTasks, setWeekTasks] = useState([]);
+  const [futureTasks, setFutureTasks] = useState([]);
   const [prioridadFiltro, setPrioridadFiltro] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("");
   const [tareas, setTareas] = useState([]);
@@ -26,44 +27,59 @@ export default function Inicio() {
     [prioridadFiltro, estadoFiltro]
   );
 
-  useState(async () => {
-    setCargando(true);
-    const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("userId");
+  useEffect(() => {
+    const fetchTareas = async () => {
+      setCargando(true);
+      const token = localStorage.getItem("token");
+      const userId = localStorage.getItem("userId");
 
-    try {
-      const { data } = await axios.get(
-        `${config.apiUrl}/tareas/incompletas/${userId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setTareas(data);
-      //setError(null);
-    } catch (error) {
-      console.error("Error al obtener las tareas", error);
-      //setError("Error al cargar las tareas. Por favor, intente de nuevo.");
-    } finally {
-      setCargando(false);
-    }
+      try {
+        const { data } = await axios.get(
+          `${config.apiUrl}/tareas/incompletas`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            params: {
+              idAgente: userId, // Esto será enviado como ?idAgente=valor
+            },
+          }
+        );
+        setTareas(data);
+      } catch (error) {
+        console.error("Error al obtener las tareas", error);
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    fetchTareas();
   }, [usuario.agente.id]);
 
   useEffect(() => {
+    const hoy = new Date();
+    const finDeSemana = addDays(hoy, 7);
+
     const tareasHoy = tareas.filter(
       (tarea) =>
-        isToday(new Date(tarea.fecha_vencimiento)) && filtrarTareas(tarea)
+        isToday(parseISO(tarea.fecha_de_entrega)) && filtrarTareas(tarea)
     );
+
     const tareasSemana = tareas.filter(
       (tarea) =>
-        isThisWeek(new Date(tarea.fecha_vencimiento)) &&
-        !isToday(new Date(tarea.fecha_vencimiento)) &&
+        isThisWeek(parseISO(tarea.fecha_de_entrega)) &&
+        !isToday(parseISO(tarea.fecha_de_entrega)) &&
         filtrarTareas(tarea)
+    );
+
+    const tareasFuturas = tareas.filter(
+      (tarea) =>
+        parseISO(tarea.fecha_de_entrega) > finDeSemana && filtrarTareas(tarea)
     );
 
     setTodayTasks(tareasHoy);
     setWeekTasks(tareasSemana);
+    setFutureTasks(tareasFuturas);
   }, [tareas, filtrarTareas]);
 
   return (
@@ -84,10 +100,11 @@ export default function Inicio() {
           <Filtro
             opciones={[
               "Sin comenzar",
-              "En curso",
+              "Curso",
               "Bloqueado",
               "Completa",
-              "En revisión",
+              "Revisión",
+              "Corrección",
             ]}
             placeHolder={"Estado"}
             onChange={(value) => setEstadoFiltro(value)}
@@ -99,12 +116,12 @@ export default function Inicio() {
         <Loading />
       ) : (
         <div>
-          <h2 className="text-2xl font-semibold mb-4">Tareas para Hoy</h2>
+          <h2 className="text-3xl mb-6">Tareas para Hoy</h2>
           {todayTasks.length > 0 ? (
             <ul className="space-y-4 mb-8">
               {todayTasks.map((tarea) => (
                 <li key={tarea.id}>
-                  <TareaCard tarea={tarea} />
+                  <TareaCardAgente tarea={tarea} />
                 </li>
               ))}
             </ul>
@@ -112,19 +129,32 @@ export default function Inicio() {
             <p className="text-gray-500 mb-8">No hay tareas para hoy.</p>
           )}
 
-          <h2 className="text-2xl font-semibold mb-4">
-            Tareas para esta Semana
-          </h2>
+          <h2 className="text-3xl mb-6">Tareas para la semana</h2>
           {weekTasks.length > 0 ? (
-            <ul className="space-y-4">
+            <ul className="space-y-4 mb-8">
               {weekTasks.map((tarea) => (
                 <li key={tarea.id}>
-                  <TareaCard tarea={tarea} />
+                  <TareaCardAgente tarea={tarea} />
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-gray-500">No hay tareas para esta semana.</p>
+            <p className="text-gray-500 mb-8">
+              No hay tareas para esta semana.
+            </p>
+          )}
+
+          <h2 className="text-3xl mb-6">Tareas posteriores</h2>
+          {futureTasks.length > 0 ? (
+            <ul className="space-y-4">
+              {futureTasks.map((tarea) => (
+                <li key={tarea.id}>
+                  <TareaCardAgente tarea={tarea} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500 mb-8">No hay tareas futuras.</p>
           )}
         </div>
       )}

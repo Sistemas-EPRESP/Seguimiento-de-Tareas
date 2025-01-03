@@ -34,6 +34,7 @@ export const TareaAgente = () => {
   const statusColor = {
     "Sin comenzar": "bg-[#64748B] text-white",
     Curso: "bg-green-500 text-white",
+    Corrección: "bg-blue-500 text-white",
     Revisión: "bg-[#F59E0B] text-black",
     Bloqueado: "bg-red-100 text-red-800",
     Finalizado: "bg-[#10B981] text-white",
@@ -60,45 +61,77 @@ export const TareaAgente = () => {
   }, [fetchTareaData]);
 
   const finalizarTarea = async () => {
-    // setCargando(true);
-    // if (tarea.estado === "Sin comenzar") {
-    //   const estado = { estado: "Curso" };
-    //   try {
-    //     const { data } = await axios.put(
-    //       `${config.apiUrl}/tareas/${id}/cambiarEstado`,
-    //       estado,
-    //       {
-    //         headers: {
-    //           Authorization: `Bearer ${token}`,
-    //         },
-    //       }
-    //     );
-    //     console.log(data);
-    //     // Actualiza el estado de la tarea directamente con la respuesta
-    //     setTarea((prevTarea) => ({
-    //       ...prevTarea,
-    //       estado: data.tarea.estado,
-    //     }));
-    //     setModalInfo({
-    //       tipo: "Exito",
-    //       titulo: "Operación exitosa",
-    //       mensaje: "Haz comenzado la tarea!",
-    //     });
-    //   } catch (error) {
-    //     console.error(error);
-    //   } finally {
-    //     setCargando(false);
-    //     setModalVisible(true);
-    //   }
-    // } else {
-    //   setCargando(false);
-    //   setModalVisible(true);
-    //   setModalInfo({
-    //     tipo: "Error",
-    //     titulo: "Operación fallida",
-    //     mensaje: "No se pudo realizar esta acción!",
-    //   });
-    // }
+    setCargando(true);
+    const permitirFinalizar = verificarFinalizar();
+    if (permitirFinalizar) {
+      var notificacion = {};
+      if (tarea.estado === "Curso") {
+        notificacion = {
+          titulo: "Finalizacion de tarea",
+          mensaje: "El agente indicó que finalizó la tarea",
+        };
+        setModalInfo({
+          tipo: "Exito",
+          titulo: "Operación exitosa",
+          mensaje: "Haz finalizado la tarea!",
+        });
+      } else {
+        notificacion = {
+          titulo: "Finalizacion de correcciones",
+          mensaje: "El agente indicó que finalizó las correcciones",
+        };
+        setModalInfo({
+          tipo: "Exito",
+          titulo: "Operación exitosa",
+          mensaje: "Haz finalizado las correcciones!",
+        });
+      }
+      try {
+        const { data } = await axios.post(
+          `${config.apiUrl}/tareas/${id}/notificar`,
+          notificacion,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        let historial = {};
+        if (tarea.estado === "Curso") {
+          historial = {
+            tipo: "Finalización",
+            descripcion: "El agente finalizó la tarea",
+          };
+        } else {
+          historial = {
+            tipo: "Finalización",
+            descripcion: "El agente finalizó las correcciones",
+          };
+        }
+        const resp = await axios.post(
+          `${config.apiUrl}/tareas/${id}/historial`,
+          historial,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setCargando(false);
+        setModalVisible(true);
+      }
+    } else {
+      setCargando(false);
+      setModalVisible(true);
+      setModalInfo({
+        tipo: "Error",
+        titulo: "Operación fallida",
+        mensaje: "No se pudo realizar esta acción!",
+      });
+    }
   };
 
   const comenzarTarea = async () => {
@@ -115,13 +148,26 @@ export const TareaAgente = () => {
             },
           }
         );
-        console.log(data);
+        const historial = {
+          tipo: "Inicio",
+          descripcion: "El agente comenzó la tarea",
+        };
+        const resp = await axios.post(
+          `${config.apiUrl}/tareas/${id}/historial`,
+          historial,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         // Actualiza el estado de la tarea directamente con la respuesta
         setTarea((prevTarea) => ({
           ...prevTarea,
-          estado: data.tarea.estado,
+          ...data, // Mezcla todos los datos nuevos en el estado actual
         }));
+
         setModalInfo({
           tipo: "Exito",
           titulo: "Operación exitosa",
@@ -144,11 +190,26 @@ export const TareaAgente = () => {
     }
   };
 
+  const verificarFinalizar = () => {
+    if (tarea.estado === "Corrección" || tarea.estado === "Curso") {
+      const res = tarea?.Notificacions?.some(
+        (notificacion) => notificacion.estado === "Pendiente"
+      );
+      if (res) {
+        return false;
+      } else {
+        return true;
+      }
+    } else {
+      return false;
+    }
+  };
+
   const handleCorreccionesEnviadas = () => {
     fetchTareaData();
   };
 
-  if (cargando || !tarea) {
+  if (cargando || !tarea || !tarea.estado) {
     return <Loading />;
   }
 
@@ -227,10 +288,10 @@ export const TareaAgente = () => {
 
           <button
             onClick={finalizarTarea}
-            className="flex justify-center items-center py-2 px-6 gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white"
+            className="flex justify-center items-center py-2 px-6 gap-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white"
           >
             <CheckCircleOutlineIcon style={{ width: "20px", height: "20px" }} />
-            <span className="">Finalizar</span>
+            <span>Finalizar</span>
           </button>
         </div>
       </div>

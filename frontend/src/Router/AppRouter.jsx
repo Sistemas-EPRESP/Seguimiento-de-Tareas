@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useContext } from "react";
 import Inicio from "../pages/Inicio";
 import InicioAdmin from "../pages/InicioAdmin"; // Nueva página para administradores
-import Tareas from "../pages/Tareas";
+import Buscar from "../pages/Buscar";
 import CrearTarea from "../pages/CrearTarea";
 import TareaDetalles from "../pages/TareaDetalles";
 import Login from "../pages/Login";
@@ -33,7 +33,7 @@ const AppRouter = () => {
       )}
 
       {/* Otras rutas compartidas */}
-      <Route path="/buscar" element={<PrivateRoute element={<Tareas />} />} />
+      <Route path="/buscar" element={<PrivateRoute element={<Buscar />} />} />
       <Route
         path="/crear-tarea"
         element={

@@ -8,6 +8,7 @@ import AssessmentIcon from "@mui/icons-material/Assessment";
 import SearchIcon from "@mui/icons-material/Search";
 import HistoryIcon from "@mui/icons-material/History";
 import Loading from "../layout/Loading";
+import Logo512 from "../img/Logo512.svg";
 
 const Menu = () => {
   const navigate = useNavigate();
@@ -27,6 +28,11 @@ const Menu = () => {
   return (
     <div className="w-1/6 h-screen bg-gray-800 text-white p-4 flex flex-col justify-between fixed">
       <div>
+        <div className="flex flex-col items-center mt-2 mb-8">
+          <div className="bg-gray-700 rounded-full flex justify-center items-center h-[200px] w-[200px]">
+            <img src={Logo512} className="h-[180px] pr-4" alt="Logo" />
+          </div>
+        </div>
         {isLoading && <Loading />}
         {usuario?.rol === "Administrador" ? (
           <>
@@ -61,7 +67,7 @@ const Menu = () => {
               </ul>
             </section>
             <section>
-              <h1 className="text-2xl mb-6 mt-6">Información</h1>
+              {/* <h1 className="text-2xl mb-6 mt-6">Información</h1>
               <ul>
                 <li className="mb-4">
                   <Link
@@ -79,12 +85,13 @@ const Menu = () => {
                     <HistoryIcon className="mr-2" /> <span>Historial</span>
                   </Link>
                 </li>
-              </ul>
+              </ul> */}
             </section>
           </>
         ) : (
           // Opciones para el rol Personal
           <section>
+            <h1 className="text-2xl mb-6">Principal</h1>
             <ul>
               <li className="mb-4">
                 <Link

@@ -1,7 +1,9 @@
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import { useNavigate } from "react-router-dom";
-import Timeline from "./Timeline";
 
 export default function TareaCard({ tarea }) {
   const navigate = useNavigate();
@@ -22,6 +24,7 @@ export default function TareaCard({ tarea }) {
     Finalizado: "bg-[#10B981] text-white",
   };
 
+  // Verificar si hay notificaciones pendientes
   const hayNotificacionesPendientes = tarea?.Notificacions?.some(
     (notificacion) => notificacion.estado === "Pendiente"
   );
@@ -29,7 +32,7 @@ export default function TareaCard({ tarea }) {
   return (
     <div
       className="mb-4 bg-gray-800 text-gray-100 rounded-lg shadow-lg p-4 hover:cursor-pointer"
-      onClick={() => navigate(`/tarea/${tarea.id}`)}
+      onClick={() => navigate(`/tarea/${tarea.id}`)} // Navegar a la página de detalles al hacer clic
     >
       <div className="flex justify-between items-start relative">
         <h2 className="text-xl font-semibold flex items-center">
@@ -58,7 +61,7 @@ export default function TareaCard({ tarea }) {
           </span>
         </div>
       </div>
-      <p className="text-sm text-gray-300 mt-2 mb-4">{tarea.descripcion}</p>
+      <p className="text-sm text-gray-300 mt-2 mb-7">{tarea.descripcion}</p>
       <div className="flex text-sm items-center text-gray-300 mb-2 gap-3">
         <PersonOutlineIcon className="text-[#94A3B8]" />
         {tarea.Agentes && tarea.Agentes.length > 0
@@ -72,7 +75,37 @@ export default function TareaCard({ tarea }) {
             ))
           : ""}
       </div>
-      <Timeline tarea={tarea} />
+      <div className="flex justify-between text-xs pt-1 text-[#94A3B8]">
+        <span className="flex items-center">
+          <CalendarTodayIcon style={{ width: "20px" }} />
+          <span className="ml-2 text-sm">
+            {tarea.fecha_inicio
+              ? format(
+                  new Date(tarea.fecha_inicio),
+                  "EEEE, d 'de' MMMM 'de' yyyy",
+                  {
+                    locale: es,
+                  }
+                )
+              : "Fecha no disponible"}
+          </span>
+        </span>
+
+        <span className="flex items-center">
+          <CalendarTodayIcon style={{ width: "20px" }} />
+          <span className="ml-2 text-sm">
+            {tarea.fecha_de_entrega
+              ? format(
+                  new Date(tarea.fecha_de_entrega),
+                  "EEEE, d 'de' MMMM 'de' yyyy",
+                  {
+                    locale: es,
+                  }
+                )
+              : "Fecha no disponible"}
+          </span>
+        </span>
+      </div>
     </div>
   );
 }
