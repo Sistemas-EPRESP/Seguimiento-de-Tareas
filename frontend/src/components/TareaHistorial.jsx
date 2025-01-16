@@ -42,9 +42,9 @@ export default function TareaHistorial({ historial, tiempos, estadoActual }) {
   };
 
   return (
-    <div className="flex gap-6 mt-6">
+    <div className="grid grid-cols-8 gap-6 mt-6">
       {/* Historial de movimientos */}
-      <div className="w-[65%] bg-gray-800 rounded-lg p-6">
+      <div className="col-span-5 bg-gray-800 rounded-lg p-6">
         <div className="flex items-center gap-2 mb-4">
           <History className="w-5 h-5 text-gray-400" />
           <h2 className="text-xl font-semibold text-gray-100">
@@ -72,7 +72,7 @@ export default function TareaHistorial({ historial, tiempos, estadoActual }) {
       </div>
 
       {/* Tiempos por estado */}
-      <div className="w-1/3 bg-gray-800 rounded-lg p-6">
+      <div className="col-span-3 bg-gray-800 rounded-lg p-6">
         <div className="flex items-center gap-2 mb-3">
           <Clock className="w-5 h-5 text-gray-400" />
           <h2 className="text-xl font-semibold text-gray-100">

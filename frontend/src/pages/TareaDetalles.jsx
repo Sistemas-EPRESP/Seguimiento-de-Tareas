@@ -12,11 +12,15 @@ import Loading from "../layout/Loading";
 import { format } from "date-fns";
 import ModalNotificacion from "../layout/ModalNotificacion";
 import TareaHistorial from "../components/TareaHistorial";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import ModalConfirmacion from "../layout/ModalConfirmacion";
 
 export default function TareaDetalles() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [notificacionPendiente, setNotificacionPendiente] = useState(false);
+  const [actualizarTarea, setActualizarTarea] = useState(false);
 
   const [modalInfo, setModalInfo] = useState({
     tipo: "",
@@ -42,6 +46,84 @@ export default function TareaDetalles() {
   const [todosAgentes, setTodosAgentes] = useState([]);
   const [cargando, setCargando] = useState(false);
   const token = localStorage.getItem("token");
+  const [confirmarEliminar, setConfirmarEliminar] = useState(false);
+
+  const validationSchema = Yup.object().shape({
+    nombre: Yup.string().required("El nombre es obligatorio"),
+    agentesSeleccionados: Yup.array().min(
+      1,
+      "Debe seleccionar al menos un agente"
+    ),
+    fecha_inicio: Yup.date().required("La fecha de inicio es obligatoria"),
+    fecha_de_entrega: Yup.date()
+      .required("La fecha de entrega es obligatoria")
+      .min(
+        Yup.ref("fecha_inicio"),
+        "La fecha de entrega debe ser posterior o igual a la fecha de inicio"
+      ),
+    fecha_limite: Yup.date()
+      .required("La fecha límite es obligatoria")
+      .min(
+        Yup.ref("fecha_de_entrega"),
+        "La fecha límite debe ser posterior o igual a la fecha de entrega"
+      ),
+    fecha_vencimiento: Yup.date()
+      .required("La fecha de vencimiento es obligatoria")
+      .min(
+        Yup.ref("fecha_limite"),
+        "La fecha de vencimiento debe ser posterior o igual a la fecha límite"
+      ),
+    prioridad: Yup.string().required("Debe seleccionar una prioridad"),
+    estado: Yup.string().required("Debe seleccionar un estado"),
+  });
+
+  const formik = useFormik({
+    initialValues: {
+      nombre: "",
+      fecha_inicio: null,
+      fecha_de_entrega: null,
+      fecha_limite: null,
+      fecha_vencimiento: null,
+      descripcion: "",
+      prioridad: "",
+      estado: "",
+      agentesSeleccionados: [],
+    },
+    validationSchema,
+    onSubmit: async (values) => {
+      setLoadingOpen(true);
+
+      const formattedData = {
+        ...values,
+        agentesIds: values.agentesSeleccionados.map((agente) => agente.id),
+      };
+
+      try {
+        await axios.put(`${config.apiUrl}/tareas/${id}`, formattedData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setActualizarTarea((prev) => !prev);
+        setModalInfo({
+          tipo: "Exito",
+          titulo: "Tarea Actualizada!",
+          mensaje: "¡Tarea actualizada con éxito!",
+        });
+      } catch (error) {
+        setModalInfo({
+          tipo: "Error",
+          titulo: "Error al crear la tarea",
+          mensaje:
+            error.response.data.error ||
+            "Ocurrió un error al crear la tarea. Intente nuevamente.",
+        });
+      } finally {
+        setLoadingOpen(false);
+        setModalVisible(true);
+      }
+    },
+  });
 
   useEffect(() => {
     const obtenerTarea = async () => {
@@ -51,16 +133,15 @@ export default function TareaDetalles() {
             Authorization: `Bearer ${token}`,
           },
         });
-        setTarea(data);
-        setFormData({
+        formik.setValues({
           nombre: data.nombre,
-          descripcion: data.descripcion,
-          prioridad: data.prioridad,
-          estado: data.estado,
           fecha_inicio: new Date(data.fecha_inicio),
           fecha_de_entrega: new Date(data.fecha_de_entrega),
           fecha_limite: new Date(data.fecha_limite),
           fecha_vencimiento: new Date(data.fecha_vencimiento),
+          descripcion: data.descripcion,
+          prioridad: data.prioridad,
+          estado: data.estado,
           agentesSeleccionados: data.Agentes || [],
         });
 
@@ -68,11 +149,13 @@ export default function TareaDetalles() {
         if (data.Notificacions?.some((n) => n.estado === "Pendiente")) {
           setNotificacionPendiente(true);
         }
-        console.log(data);
+
+        setTarea(data);
       } catch (error) {
         console.error("Error al obtener los detalles de la tarea", error);
       }
     };
+
     const obtenerAgentes = async () => {
       try {
         const { data } = await axios.get(`${config.apiUrl}/agentes`, {
@@ -88,54 +171,10 @@ export default function TareaDetalles() {
 
     obtenerTarea();
     obtenerAgentes();
-  }, [id, token]);
-
-  const modificarTarea = async (e) => {
-    e.preventDefault();
-    setLoadingOpen(true);
-
-    const agentesIds = formData.agentesSeleccionados.map((agente) => agente.id);
-    const { agentesSeleccionados, ...formDataSinExtras } = formData;
-
-    const formattedData = {
-      ...formDataSinExtras,
-      fecha_inicio: formData.fecha_inicio
-        ? format(formData.fecha_inicio, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx", {
-            locale: es,
-          })
-        : "",
-      fecha_vencimiento: formData.fecha_vencimiento
-        ? format(formData.fecha_vencimiento, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx", {
-            locale: es,
-          })
-        : "",
-      agentesIds,
-    };
-
-    try {
-      await axios.put(`${config.apiUrl}/tareas/${id}`, formattedData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setModalInfo({
-        tipo: "Exito",
-        titulo: "Tarea Actualizada!",
-        mensaje: "¡Tarea actualizada con éxito!",
-      });
-    } catch (error) {
-      setModalInfo({
-        tipo: "Error",
-        titulo: "Error al actualizar",
-        mensaje: "Ocurrió un error inesperado al actualizar la tarea",
-      });
-    } finally {
-      setLoadingOpen(false);
-      setModalVisible(true);
-    }
-  };
+  }, [id, token, actualizarTarea]);
 
   const eliminarTarea = async () => {
+    setConfirmarEliminar(false);
     setLoadingOpen(true);
     try {
       await axios.delete(`${config.apiUrl}/tareas/${id}`, {
@@ -158,13 +197,8 @@ export default function TareaDetalles() {
       setLoadingOpen(false);
       setModalVisible(true);
       setTareaEliminada(true);
-      //navigate("/");
     }
   };
-
-  function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
 
   const cerrarModal = () => {
     setModalVisible(false);
@@ -173,63 +207,31 @@ export default function TareaDetalles() {
     }
   };
 
-  const handleDateChange = (name, date) => {
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: date,
-    }));
-  };
-
-  const handleChange = (e, name, value) => {
-    if (e) {
-      const { name: eventName, value: eventValue } = e.target;
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        [eventName]: eventValue,
-      }));
-    } else {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        [name]: value,
-      }));
-    }
-  };
-
-  const agregarAgente = (e) => {
-    //console.log(formData);
+  const handleAgregarAgente = (e) => {
     const agenteId = parseInt(e.target.value);
-    //console.log(todosAgentes);
     const agenteSeleccionado = todosAgentes.find(
       (agente) => agente.id === agenteId
     );
 
     if (
       agenteSeleccionado &&
-      !formData.agentesSeleccionados.some((a) => a.id === agenteSeleccionado.id)
+      !formik.values.agentesSeleccionados.some(
+        (agente) => agente.id === agenteId
+      )
     ) {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        agentesSeleccionados: [
-          ...prevFormData.agentesSeleccionados,
-          agenteSeleccionado,
-        ],
-      }));
+      formik.setFieldValue("agentesSeleccionados", [
+        ...formik.values.agentesSeleccionados,
+        agenteSeleccionado,
+      ]);
     }
   };
 
-  const eliminarAgente = (e, id) => {
-    e.preventDefault();
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      agentesSeleccionados: prevFormData.agentesSeleccionados.filter(
-        (agente) => agente.id !== id
-      ),
-    }));
-  };
-
-  const toggleExpandirRevision = (revisionId) => {
-    setExpandidaRevision((prevId) =>
-      prevId === revisionId ? null : revisionId
+  const handleEliminarAgente = (idAgente) => {
+    formik.setFieldValue(
+      "agentesSeleccionados",
+      formik.values.agentesSeleccionados.filter(
+        (agente) => agente.id !== idAgente
+      )
     );
   };
 
@@ -260,10 +262,7 @@ export default function TareaDetalles() {
           },
         }
       );
-      setTarea((prevTarea) => ({
-        ...prevTarea,
-        estado: data.tarea.estado,
-      }));
+      setActualizarTarea((prev) => !prev);
       setModalInfo({
         tipo: "Exito",
         titulo: "Operación exitosa",
@@ -316,11 +315,7 @@ export default function TareaDetalles() {
           },
         }
       );
-      // Actualiza el estado de la tarea directamente con la respuesta
-      setTarea((prevTarea) => ({
-        ...prevTarea,
-        ...data, // Mezcla todos los datos nuevos en el estado actual
-      }));
+      setActualizarTarea((prev) => !prev);
       setModalInfo({
         tipo: "Exito",
         titulo: "Operación exitosa",
@@ -341,214 +336,262 @@ export default function TareaDetalles() {
   };
 
   return (
-    <div className="">
-      <div className="flex gap-5">
-        <div
-          id="MODIFICAR TAREA"
-          className="bg-gray-800 p-4 rounded-xl text-gray-100 w-[65%]"
-        >
-          <h1 className="text-3xl font-semibold mb-4">Modificar Tarea</h1>
-          <form onSubmit={modificarTarea} className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Nombre:</label>
-              <input
-                type="text"
-                name="nombre"
-                value={formData.nombre}
-                onChange={handleChange}
-                className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
-              />
-            </div>
+    <div className="grid grid-cols-8 auto-rows-min gap-5">
+      <div
+        id="MODIFICAR TAREA"
+        className="bg-gray-800 p-4 rounded-xl text-gray-100 col-span-5"
+      >
+        <h1 className="text-3xl font-semibold mb-4">Modificar Tarea</h1>
+        <form onSubmit={formik.handleSubmit} className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Nombre:</label>
+            <input
+              type="text"
+              name="nombre"
+              value={formik.values.nombre}
+              onChange={formik.handleChange}
+              className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
+            />
+            {formik.touched.nombre && formik.errors.nombre && (
+              <p className="text-red-500 text-sm">{formik.errors.nombre}</p>
+            )}
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Prioridad:
-              </label>
-              <select
-                name="prioridad"
-                value={formData.prioridad}
-                onChange={handleChange}
-                className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
-              >
-                <option value="">Seleccionar prioridad</option>
-                <option value="Alta">Alta</option>
-                <option value="Media">Media</option>
-                <option value="Baja">Baja</option>
-                <option value="Periódica">Periódica</option>
-              </select>
-            </div>
-            <div className="">
-              <label className="block text-sm font-medium mb-1 text-gray-100">
-                Fecha de Inicio:
-              </label>
-              <DatePicker
-                selected={formData.fecha_inicio}
-                onChange={(date) => handleDateChange("fecha_inicio", date)}
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={15}
-                dateFormat="dd/MM/yyyy HH:mm"
-                locale={es}
-                placeholderText="Selecciona fecha y hora de inicio"
-                className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
-                wrapperClassName="w-full"
-              />
-            </div>
-            <div className="">
-              <label className="block text-sm font-medium mb-1 text-gray-100">
-                Fecha de Entrega:
-              </label>
-              <DatePicker
-                selected={formData.fecha_de_entrega}
-                onChange={(date) => handleDateChange("fecha_de_entrega", date)}
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={15}
-                dateFormat="dd/MM/yyyy HH:mm"
-                locale={es}
-                placeholderText="Selecciona fecha y hora de entrega del agente"
-                className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
-                wrapperClassName="w-full"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Prioridad:</label>
+            <select
+              name="prioridad"
+              value={formik.values.prioridad}
+              onChange={formik.handleChange}
+              className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
+            >
+              <option value="">Seleccionar prioridad</option>
+              <option value="Alta">Alta</option>
+              <option value="Media">Media</option>
+              <option value="Baja">Baja</option>
+              <option value="Periódica">Periódica</option>
+            </select>
+            {formik.touched.prioridad && formik.errors.prioridad && (
+              <p className="text-red-500 text-sm">{formik.errors.prioridad}</p>
+            )}
+          </div>
 
-            <div className="">
-              <label className="block text-sm font-medium mb-1 text-gray-100">
-                Fecha Limite:
-              </label>
-              <DatePicker
-                selected={formData.fecha_limite}
-                onChange={(date) => handleDateChange("fecha_limite", date)}
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={15}
-                dateFormat="dd/MM/yyyy HH:mm"
-                locale={es}
-                placeholderText="Selecciona fecha y hora de limite"
-                className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
-                wrapperClassName="w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-100">
-                Fecha de Vencimiento:
-              </label>
-              <DatePicker
-                selected={formData.fecha_vencimiento}
-                onChange={(date) => handleDateChange("fecha_vencimiento", date)}
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={15}
-                dateFormat="dd/MM/yyyy HH:mm"
-                locale={es}
-                placeholderText="Selecciona fecha y hora de vencimiento"
-                className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
-                wrapperClassName="w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Estado:</label>
-              <select
-                name="estado"
-                value={formData.estado}
-                onChange={handleChange}
-                className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
-              >
-                <option value="">Seleccionar estado</option>
-                <option value="Sin comenzar">Sin comenzar</option>
-                <option value="Curso">Curso</option>
-                <option value="Corrección">Corrección</option>
-                <option value="Bloqueado">Bloqueado</option>
-                <option value="Finalizado">Finalizado</option>
-                <option value="Revisión">Revisión</option>
-              </select>
-            </div>
-            <div className="">
-              <label className="block text-sm font-medium mb-2">Agentes:</label>
-              <select
-                onChange={agregarAgente}
-                className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
-              >
-                <option value="">Seleccionar agente</option>
-                {todosAgentes.map((agente) => (
-                  <option key={agente.id} value={agente.id}>
-                    {agente.nombre} {agente.apellido}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Estado:</label>
+            <select
+              name="estado"
+              value={formik.values.estado}
+              onChange={formik.handleChange}
+              className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
+            >
+              <option value="">Seleccionar estado</option>
+              <option value="Sin comenzar">Sin comenzar</option>
+              <option value="Curso">Curso</option>
+              <option value="Corrección">Corrección</option>
+              <option value="Bloqueado">Bloqueado</option>
+              <option value="Finalizado">Finalizado</option>
+              <option value="Revisión">Revisión</option>
+            </select>
+            {formik.touched.estado && formik.errors.estado && (
+              <p className="text-red-500 text-sm">{formik.errors.estado}</p>
+            )}
+          </div>
 
-            <div className="">
-              <label className="block text-sm font-medium mb-2">
-                Descripción:
-              </label>
-              <textarea
-                name="descripcion"
-                value={formData.descripcion}
-                onChange={handleChange}
-                className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
-                rows="4"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-100 ">
-                Agentes seleccionados:
-              </label>
-              <div
-                id="Mostrar agentes"
-                className=" p-2 bg-gray-700 rounded-md h-[112px] overflow-y-auto"
-              >
-                <div className="flex flex-wrap gap-2">
-                  {formData.agentesSeleccionados.length > 0 ? (
-                    formData.agentesSeleccionados.map((agente, index) => (
-                      <AgenteSeleccionado
-                        key={index}
-                        agente={agente}
-                        onRemove={(e) => eliminarAgente(e, agente.id)}
-                      />
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500">
-                      No hay agentes seleccionados.
-                    </p>
-                  )}
-                </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Fecha de Inicio:
+            </label>
+            <DatePicker
+              selected={formik.values.fecha_inicio}
+              onChange={(date) => formik.setFieldValue("fecha_inicio", date)}
+              showTimeSelect
+              timeFormat="HH:mm"
+              timeIntervals={15}
+              dateFormat="dd/MM/yyyy HH:mm"
+              locale={es}
+              placeholderText="Selecciona fecha y hora de inicio"
+              className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
+              wrapperClassName="w-full"
+            />
+            {formik.touched.fecha_inicio && formik.errors.fecha_inicio && (
+              <p className="text-red-500 text-sm">
+                {formik.errors.fecha_inicio}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Fecha de Entrega:
+            </label>
+            <DatePicker
+              selected={formik.values.fecha_de_entrega}
+              onChange={(date) =>
+                formik.setFieldValue("fecha_de_entrega", date)
+              }
+              showTimeSelect
+              timeFormat="HH:mm"
+              timeIntervals={15}
+              dateFormat="dd/MM/yyyy HH:mm"
+              locale={es}
+              placeholderText="Selecciona fecha y hora de entrega"
+              className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
+              wrapperClassName="w-full"
+            />
+            {formik.touched.fecha_de_entrega &&
+              formik.errors.fecha_de_entrega && (
+                <p className="text-red-500 text-sm">
+                  {formik.errors.fecha_de_entrega}
+                </p>
+              )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Fecha Límite:
+            </label>
+            <DatePicker
+              selected={formik.values.fecha_limite}
+              onChange={(date) => formik.setFieldValue("fecha_limite", date)}
+              showTimeSelect
+              timeFormat="HH:mm"
+              timeIntervals={15}
+              dateFormat="dd/MM/yyyy HH:mm"
+              locale={es}
+              placeholderText="Selecciona fecha y hora límite"
+              className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
+              wrapperClassName="w-full"
+            />
+            {formik.touched.fecha_limite && formik.errors.fecha_limite && (
+              <p className="text-red-500 text-sm">
+                {formik.errors.fecha_limite}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Fecha de Vencimiento:
+            </label>
+            <DatePicker
+              selected={formik.values.fecha_vencimiento}
+              onChange={(date) =>
+                formik.setFieldValue("fecha_vencimiento", date)
+              }
+              showTimeSelect
+              timeFormat="HH:mm"
+              timeIntervals={15}
+              dateFormat="dd/MM/yyyy HH:mm"
+              locale={es}
+              placeholderText="Selecciona fecha y hora de vencimiento"
+              className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
+              wrapperClassName="w-full"
+            />
+            {formik.touched.fecha_vencimiento &&
+              formik.errors.fecha_vencimiento && (
+                <p className="text-red-500 text-sm">
+                  {formik.errors.fecha_vencimiento}
+                </p>
+              )}
+          </div>
+
+          <div className="col-span-1">
+            <label className="block text-sm font-medium mb-2">Agentes:</label>
+            <select
+              onChange={handleAgregarAgente}
+              className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
+            >
+              <option value="">Seleccionar agente</option>
+              {todosAgentes.map((agente) => (
+                <option key={agente.id} value={agente.id}>
+                  {agente.nombre} {agente.apellido}
+                </option>
+              ))}
+            </select>
+            {formik.touched.agentesSeleccionados &&
+              formik.errors.agentesSeleccionados && (
+                <p className="text-red-500 text-sm">
+                  {formik.errors.agentesSeleccionados}
+                </p>
+              )}
+          </div>
+
+          <div className="col-span-1">
+            <label className="block text-sm font-medium mb-2">
+              Descripción:
+            </label>
+            <textarea
+              name="descripcion"
+              value={formik.values.descripcion}
+              onChange={formik.handleChange}
+              className="w-full px-3 py-2 min-h-10 max-h-60 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
+              rows="4"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-100">
+              Agentes seleccionados:
+            </label>
+            <div
+              id="Mostrar agentes"
+              className="p-2 bg-gray-700 rounded-md h-[112px] overflow-y-auto"
+            >
+              <div className="flex flex-wrap gap-2">
+                {formik.values.agentesSeleccionados.length > 0 ? (
+                  formik.values.agentesSeleccionados.map((agente) => (
+                    <AgenteSeleccionado
+                      key={agente.id}
+                      agente={agente}
+                      onRemove={() => handleEliminarAgente(agente.id)}
+                    />
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    No hay agentes seleccionados.
+                  </p>
+                )}
               </div>
             </div>
+          </div>
+          <button
+            className="bg-green-500 w-full rounded-xl py-2 px-4 hover:bg-green-600"
+            onClick={finalizarTarea}
+          >
+            Finalizado
+          </button>
+          <div className="flex gap-4 col-start-2">
             <button
-              className="bg-green-500 w-full rounded-xl py-2 px-4 hover:bg-green-600"
-              onClick={(e) => finalizarTarea(e)}
+              type="submit"
+              className="bg-blue-500 w-full rounded-xl py-2 px-4 hover:bg-blue-600"
             >
-              Finalizado
+              Actualizar
             </button>
-            <div className="flex gap-4 col-start-2">
-              <button
-                type="submit"
-                className="bg-blue-500 w-full rounded-xl py-2 px-4 hover:bg-blue-600"
-              >
-                Actualizar
-              </button>
-              <button
-                className="w-full bg-red-500 text-white py-2 rounded-xl hover:bg-red-700 transition-colors"
-                onClick={eliminarTarea}
-                type="button"
-              >
-                Eliminar tarea
-              </button>
-            </div>
-          </form>
-        </div>
+            <button
+              className="w-full bg-red-500 text-white py-2 rounded-xl hover:bg-red-700 transition-colors"
+              onClick={() => setConfirmarEliminar(true)}
+              type="button"
+            >
+              Eliminar tarea
+            </button>
+          </div>
+        </form>
+      </div>
+      <div className="col-span-3">
         {tarea && (
           <Revisiones tareaId={id} tarea={tarea} revisiones={tarea.Revisions} />
         )}
       </div>
-      {tarea && (
-        <TareaHistorial
-          historial={tarea.HistorialMovimientos}
-          tiempos={tarea.TareaEstadoTiempos}
-          estadoActual={tarea.estado}
-        />
-      )}
+
+      <div className="col-span-8">
+        {tarea && (
+          <TareaHistorial
+            historial={tarea.HistorialMovimientos}
+            tiempos={tarea.TareaEstadoTiempos}
+            estadoActual={tarea.estado}
+          />
+        )}
+      </div>
+
       {modalVisible && (
         <ModalInformativo
           modalInfo={modalInfo}
@@ -556,13 +599,12 @@ export default function TareaDetalles() {
         />
       )}
       {loadingOpen && <Loading />}
-      {notificacionPendiente && (
-        <ModalNotificacion
-          visible={notificacionPendiente}
-          onConfirm={confirmarEntrega}
-          onCancel={() => setNotificacionPendiente(false)}
-        />
-      )}
+      <ModalConfirmacion
+        open={confirmarEliminar}
+        onClose={() => setConfirmarEliminar(false)} // Cierra el modal
+        onConfirm={eliminarTarea} // Llama a eliminarTarea al confirmar
+        mensaje="¿Estás seguro de que deseas eliminar esta tarea? Esta acción no se puede deshacer."
+      />
     </div>
   );
 }

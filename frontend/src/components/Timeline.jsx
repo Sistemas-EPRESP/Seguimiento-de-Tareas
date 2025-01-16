@@ -106,12 +106,20 @@ export default function Timeline({ tarea }) {
           // Determinar si esta fecha debe mostrarse en la fila superior
           const isOffset = shouldOffsetDate(item.date, index, dates);
 
+          // Controlar que las 4 fechas sean iguales
+          const allDatesEqual = dates.every((d) =>
+            isSameDay(d.date, item.date)
+          );
+          const adjustedPosition = allDatesEqual
+            ? (index * 100) / (dates.length - 1)
+            : position;
+
           return (
             <div
               key={index}
               className="absolute inline-flex flex-col items-center transition-all"
               style={{
-                left: `${position}%`,
+                left: `${adjustedPosition}%`,
                 transform: `translateX(${translateX})`,
                 marginTop: isOffset ? "2rem" : "0",
               }}

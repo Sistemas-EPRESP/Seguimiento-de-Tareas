@@ -24,6 +24,14 @@ exports.getAllTareasConAgentes = async () => {
 
 // Crear una tarea con agentes asociados
 exports.createTareaConAgentes = async (tareaData, agentesIds) => {
+  const tareaExistente = await Tarea.findOne({
+    where: { nombre: tareaData.nombre }
+  });
+
+  if (tareaExistente) {
+    throw new Error('Ya existe una tarea con este nombre');
+  }
+
   // Crear la nueva tarea
   const nuevaTarea = await Tarea.create(tareaData);
 
@@ -170,6 +178,9 @@ exports.buscarTareas = async (busqueda, isDate) => {
       distinct: true,
     });
 
+
+
+
     // Cargar todos los agentes asociados a cada tarea
     const tareasConTodosLosAgentes = await Promise.all(tareas.map(async (tarea) => {
       const tareaCompleta = await Tarea.findByPk(tarea.id, {
@@ -276,5 +287,25 @@ exports.cambiarNotificacion = async (idTarea, idNotificacion, estado) => {
   } catch (error) {
     console.error('Error al cambiar el estado de la notificación:', error);
     throw error; // Re-lanzar el error para ser manejado en el controlador
+  }
+};
+
+exports.getTareasPorAgente = async (agenteId) => {
+  try {
+    const tareas = await Tarea.findAll({
+      include: [
+        {
+          model: Agente,
+          where: { id: agenteId }, // Filtra por el ID del agente
+          through: { attributes: [] }, // Solo es necesario para la relación muchos a muchos
+          attributes: ['id', 'nombre', 'apellido'],
+        },
+      ],
+    });
+
+    return tareas;
+  } catch (error) {
+    console.error('Error al obtener las tareas completas por agente:', error);
+    throw error; // Re-lanza el error para ser manejado en el controlador
   }
 };

@@ -9,6 +9,7 @@ import Login from "../pages/Login";
 import { AuthContext } from "../context/AuthContext";
 import PrivateRoute from "../context/PrivateRoute";
 import { TareaAgente } from "../pages/TareaAgente";
+import MisTareas from "../pages/MisTareas";
 
 const AppRouter = () => {
   const { usuario } = useContext(AuthContext);
@@ -31,6 +32,12 @@ const AppRouter = () => {
           element={<PrivateRoute element={<TareaAgente />} />}
         />
       )}
+      {/* {usuario?.rol === "personal" && (
+        <Route
+          path="/mis-tareas"
+          element={<PrivateRoute element={<MisTareas />} />}
+        />
+      )} */}
 
       {/* Otras rutas compartidas */}
       <Route path="/buscar" element={<PrivateRoute element={<Buscar />} />} />
@@ -43,6 +50,10 @@ const AppRouter = () => {
       <Route
         path="/tarea/:id"
         element={<PrivateRoute element={<TareaDetalles />} />}
+      />
+      <Route
+        path="/mis-tareas"
+        element={<PrivateRoute element={<MisTareas />} />}
       />
 
       {/* Ruta pública de login */}

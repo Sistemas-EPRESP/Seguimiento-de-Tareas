@@ -44,8 +44,8 @@ const Login = () => {
 
     try {
       const { data } = await axios.post(`${config.apiUrl}/login`, {
-        nombre,
-        apellido,
+        nombre: nombre.toLowerCase(),
+        apellido: apellido.toLowerCase(),
         password,
       }); // Enviar datos de login al backend
 
@@ -70,7 +70,7 @@ const Login = () => {
       setModalInfo({
         tipo: "Error",
         titulo: "Error al iniciar sesión",
-        mensaje: "No se obtuvo una respuesta del servidor, intente más tarde.",
+        mensaje: error.response.data.message,
       });
     }
   };

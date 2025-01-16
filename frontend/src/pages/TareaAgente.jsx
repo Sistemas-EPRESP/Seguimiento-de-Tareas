@@ -48,6 +48,7 @@ export const TareaAgente = () => {
           Authorization: `Bearer ${token}`,
         },
       });
+
       setTarea(data);
     } catch (error) {
       console.error("Error al obtener los detalles de la tarea", error);
@@ -192,14 +193,29 @@ export const TareaAgente = () => {
 
   const verificarFinalizar = () => {
     if (tarea.estado === "Corrección" || tarea.estado === "Curso") {
-      const res = tarea?.Notificacions?.some(
+      const notificacionesPendientes = tarea?.Notificacions?.some(
         (notificacion) => notificacion.estado === "Pendiente"
       );
-      if (res) {
+
+      // Verificar si hay correcciones sin realizar
+      const correccionesSinRealizar = tarea?.Revisions?.some((revision) =>
+        revision.Correccions.some((correccion) => !correccion.estado)
+      );
+
+      // Verificar si no hay correcciones en estado "Corrección"
+      const noHayCorrecciones =
+        tarea.estado === "Corrección" &&
+        (!tarea.Revisions || tarea.Revisions.length === 0);
+
+      if (notificacionesPendientes) {
         return false;
-      } else {
-        return true;
       }
+
+      if (noHayCorrecciones || correccionesSinRealizar) {
+        return false;
+      }
+
+      return true;
     } else {
       return false;
     }
@@ -300,6 +316,7 @@ export const TareaAgente = () => {
         revisiones={tarea.Revisions}
         onCorreccionesEnviadas={handleCorreccionesEnviadas}
       />
+
       {modalVisible && (
         <ModalInformativo
           modalInfo={modalInfo}

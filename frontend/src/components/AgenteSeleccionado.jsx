@@ -2,7 +2,7 @@ import CloseIcon from "@mui/icons-material/Close";
 
 const AgenteSeleccionado = ({ agente, onRemove }) => {
   return (
-    <div className="inline-flex justify-between items-center bg-gray-600 text-gray-100 rounded-full px-3">
+    <div className="inline-flex mb-2 justify-between items-center bg-gray-600 text-gray-100 rounded-full px-3">
       <span className="text-white mr-2">
         {agente.nombre} {agente.apellido}
       </span>

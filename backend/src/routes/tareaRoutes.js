@@ -12,6 +12,7 @@ const {
   getTareasIncompletas,
   cambiarEstados,
   crearHistorial,
+  getTareasDelAgente
 } = require('../controllers/tareaController');
 
 const { createRevision } = require("../controllers/revisionController");
@@ -22,11 +23,13 @@ const router = express.Router();
 // Rutas específicas
 router.get('/tareas/fecha', getTareasByDateRange); // Obtener tareas por rango de fechas
 router.get('/tareas/buscar', buscarTareas); // Nueva ruta para buscar tareas por query
+router.get('/tareas/agente', getTareasDelAgente); // Obtener tareas de un agente
 router.get('/tareas/incompletas', getTareasIncompletas); // Obtener agentes de una tarea
 router.get('/tareas/:id/agentes', getTareaAgentes); // Obtener agentes de una tarea
 router.get('/tareas/:id/revisiones', getTareaRevisiones); // Obtener revisiones de una tarea
 router.post('/tareas/:id/revisiones', createRevision); // Obtener revisiones de una tarea
 router.get('/tareas/:id', getTareaById)
+
 
 // Otras rutas
 router.get('/tareas', getAllTareas);          // Obtener todas las tareas

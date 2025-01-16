@@ -58,34 +58,13 @@ const Menu = () => {
                 </li>
                 <li className="mb-4">
                   <Link
-                    to="/mistareas"
+                    to="/mis-tareas"
                     className="hover:bg-gray-600 bg-gray-700 flex items-center rounded px-4 py-2 w-full"
                   >
                     <TaskIcon className="mr-2" /> <span>Mis tareas</span>
                   </Link>
                 </li>
               </ul>
-            </section>
-            <section>
-              {/* <h1 className="text-2xl mb-6 mt-6">Información</h1>
-              <ul>
-                <li className="mb-4">
-                  <Link
-                    to="/reportes"
-                    className="hover:bg-gray-600 bg-gray-700 flex items-center rounded px-4 py-2 w-full"
-                  >
-                    <AssessmentIcon className="mr-2" /> <span>Reportes</span>
-                  </Link>
-                </li>
-                <li className="mb-4">
-                  <Link
-                    to="/historial"
-                    className="hover:bg-gray-600 bg-gray-700 flex items-center rounded px-4 py-2 w-full"
-                  >
-                    <HistoryIcon className="mr-2" /> <span>Historial</span>
-                  </Link>
-                </li>
-              </ul> */}
             </section>
           </>
         ) : (
@@ -103,15 +82,7 @@ const Menu = () => {
               </li>
               <li className="mb-4">
                 <Link
-                  to="/mistareas"
-                  className="hover:bg-gray-600 bg-gray-700 flex items-center rounded px-4 py-2 w-full"
-                >
-                  <SearchIcon className="mr-2" /> <span>Buscar</span>
-                </Link>
-              </li>
-              <li className="mb-4">
-                <Link
-                  to="/mistareas"
+                  to="/mis-tareas"
                   className="hover:bg-gray-600 bg-gray-700 flex items-center rounded px-4 py-2 w-full"
                 >
                   <TaskIcon className="mr-2" /> <span>Mis tareas</span>

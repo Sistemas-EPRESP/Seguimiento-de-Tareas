@@ -99,32 +99,6 @@ exports.deleteRevision = async (req, res) => {
   }
 };
 
-// exports.updateCorreccionesEstado = async (req, res) => {
-//   const revisiones = req.body; // Esperamos un array de revisiones con sus correcciones
-
-//   try {
-//     // Iterar sobre las revisiones
-//     for (const revision of revisiones) {
-//       const { id, Correccions } = revision; // Extraer el id de la revisión y sus correcciones
-
-//       // Iterar sobre las correcciones de cada revisión
-//       for (const correccion of Correccions) {
-//         const { id: correccionId, estado } = correccion; // Extraer el id y estado de la corrección
-
-//         // Actualizar cada corrección con el nuevo estado
-//         await Correccion.update(
-//           { estado }, // Actualizar solo el campo "estado"
-//           { where: { id: correccionId } } // Condición: el id de la corrección debe coincidir
-//         );
-//       }
-//     }
-
-//     res.status(200).json({ message: "Estados de correcciones actualizados correctamente" });
-//   } catch (error) {
-//     console.error("Error al actualizar los estados de las correcciones:", error);
-//     res.status(500).json({ error: "Ocurrió un error al actualizar los estados de las correcciones" });
-//   }
-// };
 
 exports.updateCorreccionesEstado = async (req, res) => {
   const revisiones = req.body; // Recibe el array de revisiones

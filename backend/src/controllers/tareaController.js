@@ -82,16 +82,13 @@ exports.createTarea = async (req, res) => {
 // Actualizar una tarea
 exports.updateTarea = async (req, res) => {
   const { id } = req.params;
+
   const { agentesIds, ...tareaData } = req.body;
   try {
     const tarea = await Tarea.findByPk(id);
     if (!tarea) {
       return res.status(404).json({ error: 'Tarea no encontrada' });
     }
-    // if (tareaData.estado !== tarea.estado) {
-    //   console.log("ENTREE");
-    //   this.cambiarEstados()
-    // }
 
     // Actualizar los datos de la tarea
     await tarea.update(tareaData);
@@ -208,54 +205,43 @@ exports.cambiarEstados = async (req, res) => {
     if (!estadosValidos.includes(nuevoEstado)) {
       return res.status(400).json({ error: 'Estado no válido' });
     }
-
     const tarea = await Tarea.findByPk(id);
     if (!tarea) {
       return res.status(404).json({ error: 'Tarea no encontrada' });
     }
+    if (nuevoEstado !== 'Finalizado') {
+      console.log("Entre");
 
-    const estadoAnterior = tarea.estado;
+      const estadoAnterior = tarea.estado;
+      let ultimaFechaEstado = null;
 
-    const ultimaFechaEstado = await obtenerUltimaFechaEstado(id, estadoAnterior);
 
+      ultimaFechaEstado = await obtenerUltimaFechaEstado(id, estadoAnterior);
 
-    if (estadoAnterior !== 'Finalizado') {
       await actualizarTiempoEstado(id, estadoAnterior, ultimaFechaEstado);
-    } else {
-      return 0;
-    }
 
-    // Registrar nueva entrada en el nuevo estado
-    const nuevoRegistro = await TareaEstadoTiempo.findOne({
-      where: { tareaId: id, estado: nuevoEstado },
-    });
-
-    if (nuevoRegistro) {
-      // Actualizamos la última entrada
-      nuevoRegistro.ultima_entrada = new Date();
-      await nuevoRegistro.save();
-    } else {
-      // Creamos un registro nuevo
-      await TareaEstadoTiempo.create({
-        tareaId: id,
-        estado: nuevoEstado,
-        ultima_entrada: new Date(),
+      // Registrar nueva entrada en el nuevo estado
+      const nuevoRegistro = await TareaEstadoTiempo.findOne({
+        where: { tareaId: id, estado: nuevoEstado },
       });
-    }
 
+      if (nuevoRegistro) {
+        // Actualizamos la última entrada
+        nuevoRegistro.ultima_entrada = new Date();
+        await nuevoRegistro.save();
+      } else {
+        // Creamos un registro nuevo
+        await TareaEstadoTiempo.create({
+          tareaId: id,
+          estado: nuevoEstado,
+          ultima_entrada: new Date(),
+        });
+      }
+    }
     // Cambiar estado en la tarea
     tarea.estado = nuevoEstado;
     await tarea.save();
-
-    // // Registrar movimiento
-    // await registrarMovimiento(
-    //   id,
-    //   'Cambio de estado',
-    //   `Cambio de estado de ${estadoAnterior} a ${nuevoEstado}`
-    // );
-
     res.status(200).json(tarea);
-
   } catch (error) {
     console.error('Error al cambiar de estado:', error);
     return res.status(500).json({ error: 'Error al cambiar el estado de la tarea' });
@@ -266,7 +252,6 @@ exports.crearHistorial = async (req, res) => {
   const { id } = req.params;
 
   const { tipo, descripcion } = req.body;
-  console.log(tipo, descripcion);
 
   try {
     const tarea = await Tarea.findByPk(id);
@@ -280,7 +265,23 @@ exports.crearHistorial = async (req, res) => {
   }
 }
 
+exports.getTareasDelAgente = async (req, res) => {
+  const { idAgente } = req.query;
 
+  try {
+    if (!idAgente) {
+      return res.status(400).json({ error: 'Se requiere el ID del agente' });
+    }
+    const agente = await Agente.findByPk(idAgente);
+    if (!agente) {
+      return res.status(404).json({ error: 'Agente no encontrado' });
+    }
+    const tareas = await TareaView.getTareasPorAgente(idAgente);
+    res.json(tareas);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
 
 const obtenerUltimaFechaEstado = async (tareaId, estado) => {
   const registro = await TareaEstadoTiempo.findOne({

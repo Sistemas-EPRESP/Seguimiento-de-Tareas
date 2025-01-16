@@ -31,7 +31,6 @@ export default function CrearRevision({ tareaId, onClose, onRevisionCreada }) {
         ...prevCorrecciones,
         correccionSeleccionada,
       ]);
-      console.log(correcciones);
     }
   };
 
@@ -72,7 +71,7 @@ export default function CrearRevision({ tareaId, onClose, onRevisionCreada }) {
         }
       );
       const historial = {
-        tipo: "Correccion",
+        tipo: "Corrección",
         descripcion:
           "La tarea ha sido corregida y entregada al agente para su revisión",
       };
@@ -85,6 +84,7 @@ export default function CrearRevision({ tareaId, onClose, onRevisionCreada }) {
           },
         }
       );
+      onRevisionCreada(response.data);
       setModalInfo({
         tipo: "Exito",
         titulo: "Revisión Creada!",
@@ -102,13 +102,29 @@ export default function CrearRevision({ tareaId, onClose, onRevisionCreada }) {
     }
   };
 
+  const handleCerrarCrearRevision = () => {
+    onClose();
+  };
+
   return (
     <Modal onClose={onClose} onConfirm={handleGuardarRevision}>
       <h2 className="text-xl font-semibold mb-4">Revisión Nueva</h2>
 
       <Select
         label={"Seleccione la/s correcciones"}
-        opciones={["Ortografía", "Formato"]}
+        opciones={[
+          "Ortografía",
+          "Formato",
+          "Contenido",
+          "Modificación de contenido",
+          "Redacción",
+          "Citas incorrectas",
+          "No corresponde a lo solicitado",
+          "Información incorrecta",
+          "Error de calculo",
+          "Tarea incompleta",
+          "Falta de documentación adjunta",
+        ]}
         onChange={handleSelectCorreccion}
         value={""}
         labelClassName="block text-sm font-medium mb-1 text-gray-100"
@@ -137,7 +153,9 @@ export default function CrearRevision({ tareaId, onClose, onRevisionCreada }) {
           ))}
         </div>
       ) : (
-        <p>No hay correcciones seleccionadas</p>
+        <p className="text-gray-100 opacity-50">
+          No hay correcciones seleccionadas
+        </p>
       )}
 
       <button
@@ -149,7 +167,7 @@ export default function CrearRevision({ tareaId, onClose, onRevisionCreada }) {
       {modalVisible && (
         <ModalInformativo
           modalInfo={modalInfo}
-          onClose={() => setModalVisible(false)} // Pasar la función de cierre
+          onClose={handleCerrarCrearRevision} // Pasar la función de cierre
         />
       )}
       {loadingOpen && <Loading />}

@@ -7,12 +7,18 @@ import DeleteIcon from "@mui/icons-material/Delete"; // Icono de eliminar
 import { format } from "date-fns";
 import { useState } from "react";
 import { es } from "date-fns/locale";
+import axios from "axios";
+import config from "../api/config";
 import CrearRevision from "./CrearRevision";
+import ModalConfirmacion from "../layout/ModalConfirmacion";
 
 export default function Revisiones({ tareaId, revisiones }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [listaRevisiones, setListaRevisiones] = useState(revisiones);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [revisionAEliminar, setRevisionAEliminar] = useState(null);
   const [expandidaRevisiones, setExpandidaRevisiones] = useState([]);
+  const token = localStorage.getItem("token");
 
   const toggleExpandirRevision = (revisionId) => {
     setExpandidaRevisiones((prevIds) =>
@@ -22,15 +28,43 @@ export default function Revisiones({ tareaId, revisiones }) {
     );
   };
 
+  const deleteRevision = async (id) => {
+    try {
+      await axios.delete(`${config.apiUrl}/revisiones/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setListaRevisiones((prevRevisiones) =>
+        prevRevisiones.filter((revision) => revision.id !== id)
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleEliminarClick = (revision) => {
+    setRevisionAEliminar(revision);
+    setModalVisible(true);
+  };
+
+  const handleConfirmarEliminar = () => {
+    if (revisionAEliminar) {
+      deleteRevision(revisionAEliminar.id);
+      setRevisionAEliminar(null);
+      setModalVisible(false);
+    }
+  };
+
   const handleRevisionCreada = (nuevaRevision) => {
     setListaRevisiones((prevRevisiones) => [...prevRevisiones, nuevaRevision]);
   };
 
   return (
-    <div id="REVISIONES" className="flex flex-col gap-4 w-1/3">
-      <div className="flex flex-col justify-between bg-gray-800 rounded-xl p-4">
+    <div id="REVISIONES" className="flex flex-col gap-4">
+      <div className="flex flex-col bg-gray-800 rounded-xl p-6">
         <h2 className="text-3xl font-bold mb-2">Revisiones</h2>
-        <div className="max-h-[350px] overflow-y-auto pr-2">
+        <div className="flex-grow max-h-[465px] overflow-y-auto pr-2 mb-4">
           {listaRevisiones.length > 0 ? (
             <ul className="space-y-2">
               {listaRevisiones.map((revision) => (
@@ -52,12 +86,10 @@ export default function Revisiones({ tareaId, revisiones }) {
                       </span>
                     </button>
                     <div className="flex space-x-2">
-                      {/* Íconos de actualizar y eliminar */}
-                      <button className="text-blue-400 hover:text-blue-500">
-                        <EditIcon />
-                      </button>
                       <button className="text-red-400 hover:text-red-500">
-                        <DeleteIcon />
+                        <DeleteIcon
+                          onClick={() => handleEliminarClick(revision)}
+                        />
                       </button>
                     </div>
                     {expandidaRevisiones.includes(revision.id) ? (
@@ -109,7 +141,7 @@ export default function Revisiones({ tareaId, revisiones }) {
               ))}
             </ul>
           ) : (
-            <p>No hay revisiones</p>
+            <p className="text-gray-100 opacity-50">No hay revisiones</p>
           )}
         </div>
         <button
@@ -127,6 +159,12 @@ export default function Revisiones({ tareaId, revisiones }) {
           onRevisionCreada={handleRevisionCreada}
         />
       )}
+      <ModalConfirmacion
+        open={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onConfirm={handleConfirmarEliminar}
+        mensaje="¿Estás seguro de que deseas eliminar esta revisión?"
+      />
     </div>
   );
 }

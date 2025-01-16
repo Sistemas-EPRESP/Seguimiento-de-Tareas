@@ -3,7 +3,7 @@ const sequelize = require('../config/database');
 
 const Correccion = sequelize.define('Correccion', {
   tipo: {
-    type: DataTypes.ENUM('Ortografía', 'Formato', 'Contenido', 'Otras'),
+    type: DataTypes.ENUM('Ortografía', 'Formato', 'Contenido', 'Modificación de contenido', 'Redacción', 'Citas incorrectas', 'No corresponde a lo solicitado', 'Información incorrecta', 'Error de calculo', 'Tarea incompleta', 'Falta de documentación adjunta'),
     allowNull: false,
   },
   estado: {

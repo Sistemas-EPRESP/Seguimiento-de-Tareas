@@ -14,6 +14,7 @@ export default function Tareas() {
   const [estadoFiltro, setEstadoFiltro] = useState("");
   const [tareas, setTareas] = useState([]);
   const [loadingOpen, setLoadingOpen] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false); // Nuevo estado
 
   useEffect(() => {
     const obtenerAgentes = async () => {
@@ -72,9 +73,12 @@ export default function Tareas() {
       });
       await sleep(2000);
       setLoadingOpen(false);
+
       setTareas(data);
+      setHasSearched(true); // Actualizar estado después de realizar la búsqueda
     } catch (error) {
       console.error("Error al buscar tareas", error);
+      setLoadingOpen(false);
     }
   };
 
@@ -137,13 +141,14 @@ export default function Tareas() {
       </div>
       <div>
         <ul className="mb-8">
-          {tareas.length > 0 ? (
-            tareas
-              .filter(filtrarTareas)
-              .map((tarea) => <TareaCard key={tarea.id} tarea={tarea} />)
-          ) : (
-            <p>No hay tareas para hoy.</p>
-          )}
+          {tareas.length > 0
+            ? tareas
+                .filter(filtrarTareas)
+                .map((tarea) => <TareaCard key={tarea.id} tarea={tarea} />)
+            : hasSearched && (
+                <p>No se encontraron tareas con ese criterio.</p>
+              ) // Mostrar solo si se ha buscado
+          }
         </ul>
       </div>
       {loadingOpen && <Loading />}
