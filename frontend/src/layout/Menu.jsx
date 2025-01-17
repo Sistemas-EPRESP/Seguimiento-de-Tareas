@@ -12,17 +12,17 @@ import Logo512 from "../img/Logo512.svg";
 
 const Menu = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false); // Estado para el modal de carga
   const { usuario, logout } = useContext(AuthContext);
+  const [cargando, setCargando] = useState(false);
 
   const handleLogout = () => {
-    setIsLoading(true); // Mostrar modal de carga
+    setCargando(true); // Mostrar modal de carga
 
     setTimeout(() => {
       logout();
-      setIsLoading(false); // Ocultar el modal de carga
+      setCargando(false); // Ocultar el modal de carga
       navigate("/login");
-    }, 2000); // Simula un tiempo de carga de 2 segundos
+    }, 60000); // Simula un tiempo de carga de 2 segundos
   };
 
   return (
@@ -33,7 +33,7 @@ const Menu = () => {
             <img src={Logo512} className="h-[180px] pr-4" alt="Logo" />
           </div>
         </div>
-        {isLoading && <Loading />}
+        <Loading isVisible={cargando} />
         {usuario?.rol === "Administrador" ? (
           <>
             {/* Opciones para el rol Administrador */}

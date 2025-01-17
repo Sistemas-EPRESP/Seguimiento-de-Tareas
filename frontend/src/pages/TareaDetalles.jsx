@@ -578,7 +578,12 @@ export default function TareaDetalles() {
       </div>
       <div className="col-span-3">
         {tarea && (
-          <Revisiones tareaId={id} tarea={tarea} revisiones={tarea.Revisions} />
+          <Revisiones
+            tareaId={id}
+            tarea={tarea}
+            revisiones={tarea.Revisions}
+            onActualizar={() => setActualizarTarea((prev) => !prev)}
+          />
         )}
       </div>
 
@@ -591,7 +596,13 @@ export default function TareaDetalles() {
           />
         )}
       </div>
-
+      {notificacionPendiente && (
+        <ModalNotificacion
+          visible={notificacionPendiente}
+          onConfirm={confirmarEntrega}
+          onCancel={() => setNotificacionPendiente(false)}
+        />
+      )}
       {modalVisible && (
         <ModalInformativo
           modalInfo={modalInfo}

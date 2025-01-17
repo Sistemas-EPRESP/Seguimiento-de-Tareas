@@ -12,7 +12,7 @@ import config from "../api/config";
 import CrearRevision from "./CrearRevision";
 import ModalConfirmacion from "../layout/ModalConfirmacion";
 
-export default function Revisiones({ tareaId, revisiones }) {
+export default function Revisiones({ tareaId, revisiones, onActualizar }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [listaRevisiones, setListaRevisiones] = useState(revisiones);
   const [modalVisible, setModalVisible] = useState(false);
@@ -157,6 +157,7 @@ export default function Revisiones({ tareaId, revisiones }) {
           tareaId={tareaId}
           onClose={() => setModalOpen(false)}
           onRevisionCreada={handleRevisionCreada}
+          onActualizar={onActualizar}
         />
       )}
       <ModalConfirmacion

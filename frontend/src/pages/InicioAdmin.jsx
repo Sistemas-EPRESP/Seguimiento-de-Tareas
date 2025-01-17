@@ -113,27 +113,6 @@ export default function Inicio() {
     setFutureTasks(tareasFuturas);
   }, [tareas, filtrarTareas]);
 
-  // useEffect(() => {
-  //   const finDeSemana = addDays(hoy, 7);
-  //   const tareasHoy = tareas.filter(
-  //     (tarea) =>
-  //       isToday(new Date(tarea.fecha_vencimiento)) && filtrarTareas(tarea)
-  //   );
-  //   const tareasSemana = tareas.filter(
-  //     (tarea) =>
-  //       isThisWeek(new Date(tarea.fecha_vencimiento)) &&
-  //       !isToday(new Date(tarea.fecha_vencimiento)) &&
-  //       filtrarTareas(tarea)
-  //   );
-  //   const tareasFuturas = tareas.filter(
-  //     (tarea) =>
-  //       parseISO(tarea.fecha_de_entrega) > finDeSemana && filtrarTareas(tarea)
-  //   );
-
-  //   setTodayTasks(tareasHoy);
-  //   setWeekTasks(tareasSemana);
-  // }, [tareas, filtrarTareas]);
-
   useEffect(() => {
     obtenerTareas();
     obtenerAgentes(); // Llamamos a la función para obtener los agentes

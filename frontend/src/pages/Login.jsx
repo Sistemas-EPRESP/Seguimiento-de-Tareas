@@ -118,7 +118,7 @@ const Login = () => {
           </button>
         </form>
       </div>
-      {cargando && <Loading />}
+      <Loading isVisible={cargando} />
       {modalVisible && (
         <ModalInformativo
           modalInfo={modalInfo}

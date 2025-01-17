@@ -8,7 +8,12 @@ import config from "../api/config";
 import ModalInformativo from "../layout/ModalInformativo";
 import Loading from "../layout/Loading";
 
-export default function CrearRevision({ tareaId, onClose, onRevisionCreada }) {
+export default function CrearRevision({
+  tareaId,
+  onClose,
+  onRevisionCreada,
+  onActualizar,
+}) {
   const { id } = useParams();
   const [correcciones, setCorrecciones] = useState([]);
   const [modalInfo, setModalInfo] = useState({
@@ -85,6 +90,7 @@ export default function CrearRevision({ tareaId, onClose, onRevisionCreada }) {
         }
       );
       onRevisionCreada(response.data);
+      onActualizar();
       setModalInfo({
         tipo: "Exito",
         titulo: "Revisión Creada!",

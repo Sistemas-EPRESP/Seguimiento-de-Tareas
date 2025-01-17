@@ -31,7 +31,7 @@ export default function TareaCard({ tarea }) {
       className="mb-4 bg-gray-800 text-gray-100 rounded-lg shadow-lg p-4 hover:cursor-pointer"
       onClick={() => navigate(`/tarea/${tarea.id}`)}
     >
-      <div className="flex justify-between items-start relative">
+      <div className="flex justify-between items-start">
         <h2 className="text-xl font-semibold flex items-center">
           {tarea.nombre}
           {hayNotificacionesPendientes && (

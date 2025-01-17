@@ -16,6 +16,10 @@ export const TareaAgente = () => {
   const token = localStorage.getItem("token");
   const [tarea, setTarea] = useState(null);
   const [cargando, setCargando] = useState(false);
+  const [botonFinalizarHabilitado, setBotonFinalizarHabilitado] =
+    useState(false);
+  const [botonComenzarHabilitado, setBotonComenzarHabilitado] = useState(false);
+  const [actualizarTarea, setActualizarTarea] = useState(false);
 
   const [modalInfo, setModalInfo] = useState({
     tipo: "",
@@ -50,6 +54,8 @@ export const TareaAgente = () => {
       });
 
       setTarea(data);
+      setBotonFinalizarHabilitado(verificarFinalizar(data));
+      setBotonComenzarHabilitado(verificarComenzar(data));
     } catch (error) {
       console.error("Error al obtener los detalles de la tarea", error);
     } finally {
@@ -59,80 +65,109 @@ export const TareaAgente = () => {
 
   useEffect(() => {
     fetchTareaData();
-  }, [fetchTareaData]);
+  }, [fetchTareaData, actualizarTarea]);
 
-  const finalizarTarea = async () => {
+  const finalizarTarea = async (e) => {
+    e.preventDefault();
     setCargando(true);
-    const permitirFinalizar = verificarFinalizar();
-    if (permitirFinalizar) {
-      var notificacion = {};
-      if (tarea.estado === "Curso") {
-        notificacion = {
-          titulo: "Finalizacion de tarea",
-          mensaje: "El agente indicó que finalizó la tarea",
-        };
-        setModalInfo({
-          tipo: "Exito",
-          titulo: "Operación exitosa",
-          mensaje: "Haz finalizado la tarea!",
-        });
-      } else {
-        notificacion = {
-          titulo: "Finalizacion de correcciones",
-          mensaje: "El agente indicó que finalizó las correcciones",
-        };
-        setModalInfo({
-          tipo: "Exito",
-          titulo: "Operación exitosa",
-          mensaje: "Haz finalizado las correcciones!",
-        });
-      }
-      try {
-        const { data } = await axios.post(
-          `${config.apiUrl}/tareas/${id}/notificar`,
-          notificacion,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        let historial = {};
-        if (tarea.estado === "Curso") {
-          historial = {
-            tipo: "Finalización",
-            descripcion: "El agente finalizó la tarea",
-          };
-        } else {
-          historial = {
-            tipo: "Finalización",
-            descripcion: "El agente finalizó las correcciones",
-          };
-        }
-        const resp = await axios.post(
-          `${config.apiUrl}/tareas/${id}/historial`,
-          historial,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setCargando(false);
-        setModalVisible(true);
-      }
+    var notificacion = {};
+    if (tarea.estado === "Curso") {
+      notificacion = {
+        titulo: "Finalizacion de tarea",
+        mensaje: "El agente indicó que finalizó la tarea",
+      };
+      setModalInfo({
+        tipo: "Exito",
+        titulo: "Operación exitosa",
+        mensaje: "Haz finalizado la tarea!",
+      });
     } else {
-      setCargando(false);
-      setModalVisible(true);
+      notificacion = {
+        titulo: "Finalizacion de correcciones",
+        mensaje: "El agente indicó que finalizó las correcciones",
+      };
+      setModalInfo({
+        tipo: "Exito",
+        titulo: "Operación exitosa",
+        mensaje: "Haz finalizado las correcciones!",
+      });
+    }
+    try {
+      const { data } = await axios.post(
+        `${config.apiUrl}/tareas/${id}/notificar`,
+        notificacion,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      let historial = {};
+      if (tarea.estado === "Curso") {
+        historial = {
+          tipo: "Finalización",
+          descripcion: "El agente finalizó la tarea",
+        };
+      } else {
+        historial = {
+          tipo: "Finalización",
+          descripcion: "El agente finalizó las correcciones",
+        };
+      }
+      const resp = await axios.post(
+        `${config.apiUrl}/tareas/${id}/historial`,
+        historial,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setActualizarTarea((prev) => !prev);
+    } catch (error) {
       setModalInfo({
         tipo: "Error",
         titulo: "Operación fallida",
         mensaje: "No se pudo realizar esta acción!",
       });
+    } finally {
+      setCargando(false);
+      setModalVisible(true);
     }
+  };
+
+  const verificarFinalizar = (tarea) => {
+    if (tarea.estado === "Corrección" || tarea.estado === "Curso") {
+      const notificacionesPendientes = tarea?.Notificacions?.some(
+        (notificacion) => notificacion.estado === "Pendiente"
+      );
+
+      // Verificar si hay correcciones sin realizar
+      const correccionesSinRealizar = tarea?.Revisions?.some((revision) =>
+        revision.Correccions.some((correccion) => !correccion.estado)
+      );
+
+      // Verificar si no hay correcciones en estado "Corrección"
+      const noHayCorrecciones =
+        tarea.estado === "Corrección" &&
+        (!tarea.Revisions || tarea.Revisions.length === 0);
+
+      if (
+        notificacionesPendientes ||
+        noHayCorrecciones ||
+        correccionesSinRealizar
+      ) {
+        return false;
+      }
+
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  const verificarComenzar = (tarea) => {
+    return tarea.estado === "Sin comenzar";
   };
 
   const comenzarTarea = async () => {
@@ -163,17 +198,12 @@ export const TareaAgente = () => {
           }
         );
 
-        // Actualiza el estado de la tarea directamente con la respuesta
-        setTarea((prevTarea) => ({
-          ...prevTarea,
-          ...data, // Mezcla todos los datos nuevos en el estado actual
-        }));
-
         setModalInfo({
           tipo: "Exito",
           titulo: "Operación exitosa",
           mensaje: "Haz comenzado la tarea!",
         });
+        setActualizarTarea((prev) => !prev);
       } catch (error) {
         console.error(error);
       } finally {
@@ -188,36 +218,6 @@ export const TareaAgente = () => {
         titulo: "Operación fallida",
         mensaje: "No se pudo realizar esta acción!",
       });
-    }
-  };
-
-  const verificarFinalizar = () => {
-    if (tarea.estado === "Corrección" || tarea.estado === "Curso") {
-      const notificacionesPendientes = tarea?.Notificacions?.some(
-        (notificacion) => notificacion.estado === "Pendiente"
-      );
-
-      // Verificar si hay correcciones sin realizar
-      const correccionesSinRealizar = tarea?.Revisions?.some((revision) =>
-        revision.Correccions.some((correccion) => !correccion.estado)
-      );
-
-      // Verificar si no hay correcciones en estado "Corrección"
-      const noHayCorrecciones =
-        tarea.estado === "Corrección" &&
-        (!tarea.Revisions || tarea.Revisions.length === 0);
-
-      if (notificacionesPendientes) {
-        return false;
-      }
-
-      if (noHayCorrecciones || correccionesSinRealizar) {
-        return false;
-      }
-
-      return true;
-    } else {
-      return false;
     }
   };
 
@@ -296,7 +296,10 @@ export const TareaAgente = () => {
         <div className="flex justify-between">
           <button
             onClick={comenzarTarea}
-            className="flex justify-center items-center py-2 px-6 gap-2 rounded-xl bg-green-600 hover:bg-green-700 text-white"
+            disabled={!botonComenzarHabilitado}
+            className={`flex justify-center items-center py-2 px-6 gap-2 rounded-xl bg-green-600 hover:bg-green-700 text-white ${
+              !botonComenzarHabilitado ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
             <PlayCircleOutlineIcon style={{ width: "20px", height: "20px" }} />
             <span className="">Comenzar</span>
@@ -304,10 +307,13 @@ export const TareaAgente = () => {
 
           <button
             onClick={finalizarTarea}
-            className="flex justify-center items-center py-2 px-6 gap-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white"
+            disabled={!botonFinalizarHabilitado}
+            className={`flex justify-center items-center py-2 px-6 gap-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white ${
+              !botonFinalizarHabilitado ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
             <CheckCircleOutlineIcon style={{ width: "20px", height: "20px" }} />
-            <span>Finalizar</span>
+            <span>Finalizar Tarea</span>
           </button>
         </div>
       </div>

@@ -210,7 +210,6 @@ exports.cambiarEstados = async (req, res) => {
       return res.status(404).json({ error: 'Tarea no encontrada' });
     }
     if (nuevoEstado !== 'Finalizado') {
-      console.log("Entre");
 
       const estadoAnterior = tarea.estado;
       let ultimaFechaEstado = null;
