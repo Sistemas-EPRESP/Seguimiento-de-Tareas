@@ -76,3 +76,28 @@ const checkAndUpdateRevisionStatus = async (revisionId) => {
     await revision.update({ estado: true });
   }
 };
+
+exports.calcularRevisiones = (tareas) => {
+  const tiposDeCorreccion = [
+    'Ortografía', 'Formato', 'Contenido', 'Modificación de contenido', 'Redacción',
+    'Citas incorrectas', 'No corresponde a lo solicitado', 'Información incorrecta',
+    'Error de calculo', 'Tarea incompleta', 'Falta de documentación adjunta'
+  ];
+
+  const correccionesContador = tiposDeCorreccion.reduce((acc, tipo) => {
+    acc[tipo] = 0;
+    return acc;
+  }, {});
+
+  tareas.forEach(tarea => {
+    tarea.Revisions.forEach(revision => {
+      revision.Correccions.forEach(correccion => {
+        if (correccionesContador.hasOwnProperty(correccion.tipo)) {
+          correccionesContador[correccion.tipo]++;
+        }
+      });
+    });
+  });
+
+  return correccionesContador;
+}

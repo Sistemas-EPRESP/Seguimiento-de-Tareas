@@ -7,6 +7,8 @@ import PersonIcon from "@mui/icons-material/Person";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import SearchIcon from "@mui/icons-material/Search";
 import HistoryIcon from "@mui/icons-material/History";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import AddIcon from "@mui/icons-material/Add";
 import Loading from "../layout/Loading";
 import Logo512 from "../img/Logo512.svg";
 
@@ -22,7 +24,7 @@ const Menu = () => {
       logout();
       setCargando(false); // Ocultar el modal de carga
       navigate("/login");
-    }, 60000); // Simula un tiempo de carga de 2 segundos
+    }, 1000); // Simula un tiempo de carga de 2 segundos
   };
 
   return (
@@ -50,6 +52,14 @@ const Menu = () => {
                 </li>
                 <li className="mb-4">
                   <Link
+                    to="/crear-tarea"
+                    className="hover:bg-gray-600 bg-gray-700 flex items-center rounded px-4 py-2 w-full"
+                  >
+                    <AddIcon className="mr-2" /> <span>Crear tarea</span>
+                  </Link>
+                </li>
+                <li className="mb-4">
+                  <Link
                     to="/buscar"
                     className="hover:bg-gray-600 bg-gray-700 flex items-center rounded px-4 py-2 w-full"
                   >
@@ -62,6 +72,19 @@ const Menu = () => {
                     className="hover:bg-gray-600 bg-gray-700 flex items-center rounded px-4 py-2 w-full"
                   >
                     <TaskIcon className="mr-2" /> <span>Mis tareas</span>
+                  </Link>
+                </li>
+              </ul>
+            </section>
+            <section>
+              <h1 className="text-2xl mb-6">Información</h1>
+              <ul>
+                <li className="mb-4">
+                  <Link
+                    to="/reportes"
+                    className="hover:bg-gray-600 bg-gray-700 flex items-center rounded px-4 py-2 w-full"
+                  >
+                    <AssessmentIcon className="mr-2" /> <span>Reportes</span>
                   </Link>
                 </li>
               </ul>

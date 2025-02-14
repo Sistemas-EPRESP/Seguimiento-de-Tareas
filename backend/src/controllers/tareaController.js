@@ -89,25 +89,14 @@ exports.updateTarea = async (req, res) => {
     if (!tarea) {
       return res.status(404).json({ error: 'Tarea no encontrada' });
     }
-
-    // Actualizar los datos de la tarea
-    await tarea.update(tareaData);
-
+    let tareaActualizada;
     if (agentesIds && agentesIds.length > 0) {
-      const agentes = await Agente.findAll({
-        where: {
-          id: agentesIds, // Esto buscará todos los agentes cuyos IDs están en el array agentesIds
-        },
-      });
-      //Actualizar la relación muchos a muchos
-      await tarea.setAgentes(agentes);
-
-      // Obtener la tarea actualizada con los agentes
-      const tareaActualizada = await TareaView.getAgentesPorTarea(id)
-      res.json(tareaActualizada)
+      tareaActualizada = TareaView.updateTarea(tarea, tareaData, agentesIds)
     } else {
-      res.json(tareaData)
+      throw new Error('Error con los agentes')
     }
+    tareaActualizada = await TareaView.getAgentesPorTarea(id)
+    res.json(tareaActualizada)
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -236,6 +225,8 @@ exports.cambiarEstados = async (req, res) => {
           ultima_entrada: new Date(),
         });
       }
+    } else {
+      tarea.fecha_finalizado = new Date();
     }
     // Cambiar estado en la tarea
     tarea.estado = nuevoEstado;

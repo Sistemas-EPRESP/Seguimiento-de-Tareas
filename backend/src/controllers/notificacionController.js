@@ -1,11 +1,12 @@
 const Notificacion = require('../models/Notificacion');
 const TareaView = require('../views/tareaView');
+const notificacionView = require('../views/notificacionView');
 
 exports.crearNotificacion = async (req, res) => {
   const { id } = req.params
   const infoNotificar = req.body
   try {
-    const notificacion = await TareaView.notificar(id, infoNotificar);
+    const notificacion = await notificacionView.crearNotificacion(id, infoNotificar);
     res.status(201).json(notificacion);
   } catch (error) {
     res.status(500).json({ error: error.message });

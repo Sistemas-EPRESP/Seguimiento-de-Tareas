@@ -8,45 +8,71 @@ const TareaEstadoTiempo = require('../models/TareaEstadoTiempo');
 const HistorialMovimiento = require('../models/HistorialMovimiento')
 const { Op, Sequelize } = require('sequelize');
 const sequelize = require('../config/database');
+const { get } = require('../routes/reportesRoutes');
+const revisionView = require('./revisionView');
+const agenteView = require('./agenteView');
+const notificacionView = require('./notificacionView')
 
 // Obtener todas las tareas con agentes asociados
-exports.getAllTareasConAgentes = async () => {
-  return await Tarea.findAll({
-    include: [
-      {
-        model: Agente,
-        through: { attributes: [] },
-        attributes: ['nombre', 'apellido']
-      }
-    ]
-  });
+exports.getAllTareasConAgentes = async (tareas) => {
+  if (tareas) {
+    // Si se proporcionan tareas, devolver los agentes de cada tarea
+    const tareasConAgentes = await Promise.all(tareas.map(async (tarea) => {
+      const tareaConAgentes = await Tarea.findByPk(tarea.id, {
+        include: [
+          {
+            model: Agente,
+            through: { attributes: [] },
+            attributes: ['nombre', 'apellido']
+          }
+        ]
+      });
+      return tareaConAgentes;
+    }));
+    return tareasConAgentes;
+  } else {
+    // Si tareas es null, devolver todas las tareas con sus agentes
+    return await Tarea.findAll({
+      include: [
+        {
+          model: Agente,
+          through: { attributes: [] },
+          attributes: ['nombre', 'apellido']
+        }
+      ]
+    });
+  }
 };
 
 // Crear una tarea con agentes asociados
 exports.createTareaConAgentes = async (tareaData, agentesIds) => {
-  const tareaExistente = await Tarea.findOne({
-    where: { nombre: tareaData.nombre }
-  });
+  let agentes = []
 
-  if (tareaExistente) {
-    throw new Error('Ya existe una tarea con este nombre');
+  if (agentesIds && agentesIds.length > 0) {
+    agentes = await agenteView.getAllAgentesById(agentesIds);
   }
 
   // Crear la nueva tarea
   const nuevaTarea = await Tarea.create(tareaData);
-
-  // Asociar agentes si se proporcionaron agentesIds
-  if (agentesIds && agentesIds.length > 0) {
-    const agentes = await Agente.findAll({
-      where: {
-        id: agentesIds
-      }
-    });
-    await nuevaTarea.addAgentes(agentes); // Método de Sequelize para asociar agentes
-  }
+  await nuevaTarea.addAgentes(agentes);
 
   return nuevaTarea;
 };
+
+exports.updateTarea = async (tarea, tareaData, agentesIds) => {
+  try {
+    const agentes = await agenteView.getAllAgentesById(agentesIds);
+    if (agentes) {
+      await tarea.update(tareaData);
+      await tarea.setAgentes(agentes);
+    } else {
+      throw new Error('Error al actualizar la tarea')
+    }
+    return tarea;
+  } catch (error) {
+    throw error;
+  }
+}
 
 // Obtener una tarea por ID con agentes asociados
 exports.getAgentesPorTarea = async (id) => {
@@ -147,7 +173,7 @@ exports.getTareaCompletaPorId = async (id) => {
   }
 };
 
-exports.buscarTareas = async (busqueda, isDate) => {
+exports.buscarTareas = async (busqueda) => {
   try {
     const tareas = await Tarea.findAll({
       where: {
@@ -177,23 +203,7 @@ exports.buscarTareas = async (busqueda, isDate) => {
       }],
       distinct: true,
     });
-
-
-
-
-    // Cargar todos los agentes asociados a cada tarea
-    const tareasConTodosLosAgentes = await Promise.all(tareas.map(async (tarea) => {
-      const tareaCompleta = await Tarea.findByPk(tarea.id, {
-        include: [{
-          model: Agente,
-          through: TareaAgente,
-          attributes: ['id', 'nombre', 'apellido'],
-        }],
-      });
-      return tareaCompleta;
-    }));
-
-    return tareasConTodosLosAgentes;
+    return this.getAllTareasConAgentes(tareas);
   } catch (error) {
     console.error('Error al buscar tareas:', error);
     throw error;
@@ -240,48 +250,11 @@ exports.getTareasIncompletasPorAgente = async (agenteId) => {
   return data;
 };
 
-exports.notificar = async (idTarea, infoNotificar) => {
-  try {
-    // Verificar si la tarea existe
-    const tarea = await Tarea.findByPk(idTarea);
-    if (!tarea) {
-      throw new Error(`La tarea con ID ${idTarea} no existe.`);
-    }
-
-    // Crear la notificación asociada a la tarea
-    const nuevaNotificacion = await Notificacion.create({
-      titulo: infoNotificar.titulo,
-      mensaje: infoNotificar.mensaje,
-      estado: 'Pendiente', // Estado predeterminado
-      tareaId: idTarea, // Asocia la notificación a la tarea
-    });
-
-    return nuevaNotificacion;
-  } catch (error) {
-    console.error('Error al crear la notificación:', error);
-    throw new Error('No se pudo crear la notificación.');
-  }
-};
-
 exports.cambiarNotificacion = async (idTarea, idNotificacion, estado) => {
 
   try {
     // Buscar la notificación asociada a la tarea y con el id proporcionado
-    const notificacion = await Notificacion.findOne({
-      where: {
-        id: idNotificacion,
-        tareaId: idTarea, // Asegurarse de que pertenezca a la tarea indicada
-      },
-    });
-    // Si no se encuentra la notificación, lanzar un error
-    if (!notificacion) {
-      throw new Error('Notificación no encontrada o no asociada a esta tarea.');
-    }
-
-    // Actualizar el estado de la notificación
-    notificacion.estado = estado;
-    await notificacion.save();
-
+    const notificacion = await notificacionView.actualizarNotificacion(idTarea, idNotificacion, estado)
     // Devolver la notificación actualizada
     return notificacion;
   } catch (error) {
@@ -307,5 +280,54 @@ exports.getTareasPorAgente = async (agenteId) => {
   } catch (error) {
     console.error('Error al obtener las tareas completas por agente:', error);
     throw error; // Re-lanza el error para ser manejado en el controlador
+  }
+};
+
+exports.getReporteAgente = async (agente, inicio, fin) => {
+  try {
+    const whereClause = {
+      [Op.or]: [
+        {
+          fecha_vencimiento: {
+            [Op.between]: [inicio, fin]
+          }
+        },
+        {
+          fecha_inicio: {
+            [Op.between]: [inicio, fin]
+          }
+        },
+        {
+          fecha_finalizado: {
+            [Op.between]: [inicio, fin]
+          }
+        },
+      ]
+    };
+
+    if (agente !== 'todos') {
+      whereClause['$Agentes.id$'] = parseInt(agente, 10);
+    }
+
+    const tareas = await Tarea.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: Agente,
+          through: { model: TareaAgente, attributes: [] },
+          attributes: ['id', 'nombre', 'apellido'],
+          required: true,
+        },
+      ],
+    });
+
+    const tareasCompletas = await Promise.all(tareas.map(async (tarea) => {
+      return await exports.getTareaCompletaPorId(tarea.id);
+    }));
+
+    return tareasCompletas;
+  } catch (error) {
+    console.error('Error al obtener el reporte de tareas del agente:', error);
+    throw error;
   }
 };

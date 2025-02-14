@@ -12,6 +12,23 @@ exports.crearAgente = async (nombre, apellido) => {
   return await Agente.create({ nombre: nombreValidado, apellido: apellidoValidado });
 };
 
+exports.asignarAgenteATarea = async (agentes) => {
+
+}
+
+exports.getAllAgentesById = async (agentesIds) => {
+  try {
+    const agentes = await Agente.findAll({
+      where: {
+        id: agentesIds
+      }
+    });
+    return agentes;
+  } catch (error) {
+    throw new Error('Ocurrio un error con los agentes');
+  }
+}
+
 exports.obtenerAgente = async (idAgente) => {
   return await Agente.findByPk(idAgente, {
     include: [

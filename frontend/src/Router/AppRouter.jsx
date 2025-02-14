@@ -10,6 +10,7 @@ import { AuthContext } from "../context/AuthContext";
 import PrivateRoute from "../context/PrivateRoute";
 import { TareaAgente } from "../pages/TareaAgente";
 import MisTareas from "../pages/MisTareas";
+import Reportes from "../pages/Reportes";
 
 const AppRouter = () => {
   const { usuario } = useContext(AuthContext);
@@ -41,6 +42,10 @@ const AppRouter = () => {
 
       {/* Otras rutas compartidas */}
       <Route path="/buscar" element={<PrivateRoute element={<Buscar />} />} />
+      <Route
+        path="/reportes"
+        element={<PrivateRoute element={<Reportes />} isAdminRequired={true} />}
+      />
       <Route
         path="/crear-tarea"
         element={

@@ -5,12 +5,15 @@ import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Loading from "../layout/Loading.jsx";
 import ModalInformativo from "../layout/ModalInformativo.jsx";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
 const Login = () => {
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false); // Recordar usuario y contraseña
   const [cargando, setCargando] = useState(false);
+  const [mostrarPassword, setMostrarPassword] = useState(false);
   const { setUsuario } = useContext(AuthContext); // Para establecer el usuario logueado
   const [modalInfo, setModalInfo] = useState({
     tipo: "",
@@ -90,15 +93,22 @@ const Login = () => {
               className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
             />
           </div>
-          <div className="grid gap-1">
+          <div className="grid gap-1 relative">
             <label>Contraseña</label>
             <input
-              type="password"
+              type={mostrarPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
             />
+            <button
+              type="button"
+              onClick={() => setMostrarPassword(!mostrarPassword)}
+              className="absolute right-3 top-9 text-gray-400 hover:text-gray-200"
+            >
+              {mostrarPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+            </button>
           </div>
           <div className="flex items-center">
             <input

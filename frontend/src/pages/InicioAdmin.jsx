@@ -93,19 +93,19 @@ export default function Inicio() {
 
     const tareasHoy = tareas.filter(
       (tarea) =>
-        isToday(parseISO(tarea.fecha_de_entrega)) && filtrarTareas(tarea)
+        isToday(parseISO(tarea.fecha_vencimiento)) && filtrarTareas(tarea)
     );
 
     const tareasSemana = tareas.filter(
       (tarea) =>
-        isThisWeek(parseISO(tarea.fecha_de_entrega)) &&
-        !isToday(parseISO(tarea.fecha_de_entrega)) &&
+        isThisWeek(parseISO(tarea.fecha_vencimiento)) &&
+        !isToday(parseISO(tarea.fecha_vencimiento)) &&
         filtrarTareas(tarea)
     );
 
     const tareasFuturas = tareas.filter(
       (tarea) =>
-        parseISO(tarea.fecha_de_entrega) > finDeSemana && filtrarTareas(tarea)
+        parseISO(tarea.fecha_vencimiento) > finDeSemana && filtrarTareas(tarea)
     );
 
     setTodayTasks(tareasHoy);

@@ -5,6 +5,7 @@ const tareasRoutes = require('./routes/tareaRoutes');
 const revisionRoutes = require('./routes/revisionRoutes');
 const authRoutes = require('./routes/authRoutes');
 const correccionesRoutes = require('./routes/correccionesRoutes');
+const reportesRoutes = require('./routes/reportesRoutes');
 const cors = require('cors');
 const authenticateToken = require('./middlewares/authMiddleware'); // Importa el middleware de autenticación
 require('./models/associations'); // Asegúrate de que las asociaciones se carguen
@@ -29,12 +30,15 @@ app.use('/api', authRoutes); // Rutas de autenticación (login) no protegidas
 app.use('/api', authenticateToken, tareasRoutes);
 app.use('/api', authenticateToken, agenteRoutes);
 app.use('/api', authenticateToken, revisionRoutes);
-app.use('/api', authenticateToken, correccionesRoutes);
+app.use('/api', authenticateToken, reportesRoutes);
+//app.use('/api', authenticateToken, correccionesRoutes);
+//app.use('/api', reportesRoutes);
 
 // app.use('/api', tareasRoutes);
 // app.use('/api', agenteRoutes);
 // app.use('/api', revisionRoutes);
 // app.use('/api', correccionesRoutes);
+
 
 // Sincronización de la base de datos
 sequelize

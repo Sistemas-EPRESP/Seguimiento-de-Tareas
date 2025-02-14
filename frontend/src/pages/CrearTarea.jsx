@@ -147,7 +147,7 @@ export default function CrearTareas() {
   return (
     <div className="flex justify-center items-center mt-10 px-60">
       <div className="w-3/4 bg-gray-800 text-gray-100 rounded-lg p-8 shadow-2xl">
-        <h1 className="text-4xl mb-6 text-center">Crear Tarea</h1>
+        <h1 className="text-4xl mb-6 text-center">Tarea nueva</h1>
         <form onSubmit={formik.handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium mb-1">Nombre:</label>

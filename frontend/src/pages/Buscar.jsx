@@ -141,17 +141,16 @@ export default function Tareas() {
       </div>
       <div>
         <ul className="mb-8">
-          {tareas.length > 0
-            ? tareas
-                .filter(filtrarTareas)
-                .map((tarea) => <TareaCard key={tarea.id} tarea={tarea} />)
-            : hasSearched && (
-                <p>No se encontraron tareas con ese criterio.</p>
-              ) // Mostrar solo si se ha buscado
+          {
+            tareas.length > 0
+              ? tareas
+                  .filter(filtrarTareas)
+                  .map((tarea) => <TareaCard key={tarea.id} tarea={tarea} />)
+              : hasSearched && <p>No se encontraron tareas con ese criterio.</p> // Mostrar solo si se ha buscado
           }
         </ul>
       </div>
-      {loadingOpen && <Loading />}
+      {loadingOpen && <Loading isVisible={true} />}
     </div>
   );
 }
