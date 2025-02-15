@@ -72,11 +72,10 @@ export default function Reportes() {
             },
           }
         );
-        console.log(data);
-        console.log(response);
+        console.log(response.data);
 
         setReportes(data); // Guardamos las tareas en el state
-        //setVencimientos(response.data)
+        setVencimientos(response.data);
       } catch (error) {
         console.error("Error al generar el reporte", error);
       } finally {
@@ -139,7 +138,9 @@ export default function Reportes() {
         </div>
       ) : null}
       <Loading isVisible={loading} />
-      {/* {reportes && <ReportesCard reportes={reportes} />} */}
+      {reportes && (
+        <ReportesCard reportes={reportes} vencimientos={vencimientos} />
+      )}
     </div>
   );
 }

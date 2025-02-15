@@ -1,4 +1,4 @@
-export default function ReportesCard({ reportes }) {
+export default function ReportesCard({ reportes, vencimientos }) {
   return (
     <div className="">
       {/* Total de tareas */}
@@ -7,7 +7,7 @@ export default function ReportesCard({ reportes }) {
           <h4 className="text-lg font-semibold text-gray-300">
             Total de Tareas
           </h4>
-          <p className="text-2xl font-bold text-white">{reportes.total}</p>
+          <p className="text-xl font-bold text-white">{reportes.length}</p>
         </div>
 
         {/* Tareas por Estado */}
@@ -17,16 +17,14 @@ export default function ReportesCard({ reportes }) {
           </h4>
           <div className="flex justify-between mt-2">
             <p className="text-gray-300">En progreso:</p>
-            <p className="font-semibold text-white">{reportes["en proceso"]}</p>
+            <p className="font-semibold text-white">
+              {vencimientos.tareasActivas.length}
+            </p>
           </div>
           <div className="flex justify-between mt-1">
             <p className="text-gray-300">Completadas:</p>
-            <p className="font-semibold text-white">{reportes.completadas}</p>
-          </div>
-          <div className="flex justify-between mt-1">
-            <p className="text-gray-300">Pendientes:</p>
             <p className="font-semibold text-white">
-              {reportes.total - reportes.completadas - reportes["en proceso"]}
+              {vencimientos.tareasCompletadas.length}
             </p>
           </div>
         </div>
@@ -34,19 +32,19 @@ export default function ReportesCard({ reportes }) {
         {/* Entregas Incompletas */}
         <div className="w-1/4 bg-gray-800 p-4 shadow-md rounded-lg">
           <h4 className="text-lg font-semibold text-gray-300">
-            Entregas Incompletas
+            Tareas vencidas
           </h4>
           <p className="text-2xl font-bold text-white">
-            {reportes.incompletas}
+            {vencimientos.tareasVencidas.length}
           </p>
         </div>
 
         <div className="w-1/4 bg-gray-800 p-4 shadow-md rounded-lg">
           <h4 className="text-lg font-semibold text-gray-300">
-            Entregas Incompletas
+            Tareas futuras
           </h4>
           <p className="text-2xl font-bold text-white">
-            {reportes.incompletas}
+            {vencimientos.tareasFuturas.length}
           </p>
         </div>
       </div>
@@ -54,9 +52,9 @@ export default function ReportesCard({ reportes }) {
       {/* Tabla de Correcciones */}
       <div className="col-span-14 mt-6">
         <h3 className="text-xl font-semibold text-gray-300 mb-4">
-          Tareas Finalizadas y Correcciones
+          Correcciones
         </h3>
-        <div className="overflow-x-auto">
+        {/* <div className="overflow-x-auto">
           <table className="w-full bg-gray-800 rounded-lg ">
             <thead className="">
               <tr className="text-left">
@@ -79,7 +77,7 @@ export default function ReportesCard({ reportes }) {
               </tr>
             </tbody>
           </table>
-        </div>
+        </div> */}
       </div>
     </div>
   );
