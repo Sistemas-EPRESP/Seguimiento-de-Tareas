@@ -1,4 +1,7 @@
 export default function ReportesCard({ reportes, vencimientos }) {
+  const categoriasCorrecciones =
+    reportes.length > 0 ? Object.keys(reportes[0].Correcciones) : [];
+
   return (
     <div className="">
       {/* Total de tareas */}
@@ -54,30 +57,42 @@ export default function ReportesCard({ reportes, vencimientos }) {
         <h3 className="text-xl font-semibold text-gray-300 mb-4">
           Correcciones
         </h3>
-        {/* <div className="overflow-x-auto">
-          <table className="w-full bg-gray-800 rounded-lg ">
-            <thead className="">
+        <div className="overflow-x-auto">
+          <table className="w-full bg-gray-800 rounded-lg border border-gray-700">
+            <thead className="bg-gray-700">
               <tr className="text-left">
-                <th className="p-3  text-gray-400">Categoría</th>
-                {reportes.Correcciones.map((correccion, index) => (
-                  <th key={index} className="p-3 text-gray-400 text-center">
-                    {correccion.tipo}
+                <th className="p-3 border-b border-gray-600 text-gray-300">
+                  Tarea
+                </th>
+                {categoriasCorrecciones.map((categoria, index) => (
+                  <th
+                    key={index}
+                    className="p-3 border-b border-gray-600 text-gray-300 text-center"
+                  >
+                    {categoria}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              <tr className="text-center border-t">
-                <td className="p-3 font-semibold text-white">Cantidad</td>
-                {reportes.Correcciones.map((correccion, index) => (
-                  <td key={index} className="p-3 text-white">
-                    {correccion.cantidad}
+              {reportes.map((tarea) => (
+                <tr
+                  key={tarea.id}
+                  className="text-center border-t border-gray-700"
+                >
+                  <td className="p-3 font-semibold text-gray-300">
+                    {tarea.nombre}
                   </td>
-                ))}
-              </tr>
+                  {categoriasCorrecciones.map((categoria, index) => (
+                    <td key={index} className="p-3 text-white">
+                      {tarea.Correcciones[categoria]}
+                    </td>
+                  ))}
+                </tr>
+              ))}
             </tbody>
           </table>
-        </div> */}
+        </div>
       </div>
     </div>
   );

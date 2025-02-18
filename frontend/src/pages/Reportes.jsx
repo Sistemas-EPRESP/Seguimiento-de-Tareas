@@ -72,7 +72,6 @@ export default function Reportes() {
             },
           }
         );
-        console.log(response.data);
 
         setReportes(data); // Guardamos las tareas en el state
         setVencimientos(response.data);

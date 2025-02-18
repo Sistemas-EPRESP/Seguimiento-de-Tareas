@@ -22,6 +22,7 @@ exports.getReportesVencimientos = async (req, res) => {
     const { agente, periodo } = req.query;
     const { inicio, fin } = obtenerFechasPeriodo(periodo);
     const tareas = await TareaView.getReporteAgente(agente, inicio, fin);
+
     const reportesTotal = ReporteView.clasificarTareas(tareas);
     return res.status(200).json(reportesTotal);
   } catch (error) {
