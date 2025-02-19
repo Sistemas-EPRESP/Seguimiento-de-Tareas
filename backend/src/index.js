@@ -49,8 +49,8 @@ sequelize
     console.log("Conexión establecida correctamente con la base de datos");
 
     // Inicia el servidor después de la sincronización
-    app.listen(3000, "0.0.0.0", () => {
-      console.log("Servidor ejecutándose en el puerto 3000");
+    app.listen(4000, "0.0.0.0", () => {
+      console.log("Servidor ejecutándose en el puerto 4000");
     });
   })
   .catch((error) => {
