@@ -230,14 +230,16 @@ export const TareaAgente = () => {
   }
 
   return (
-    <div className="flex gap-6 max-h-[350px]">
+    <div className="flex flex-col md:flex-row gap-6 ">
       <div
         id="Datos basicos"
-        className="flex flex-col justify-between w-3/4 h-[350px] gap-4 bg-gray-800 text-gray-100 rounded-lg p-6"
+        className="flex flex-col justify-between w-full md:w-3/4 h-auto md:h-[350px] gap-4 bg-gray-800 text-gray-100 rounded-lg p-6"
       >
         <div className="space-y-4">
-          <div className="flex justify-between items-start">
-            <h1 className="text-3xl font-semibold">{tarea.nombre}</h1>
+          <div className="flex flex-col sm:flex-row justify-between items-start">
+            <h1 className="text-2xl mb-2 md:mb-0 sm:text-3xl font-semibold">
+              {tarea.nombre}
+            </h1>
             <div className="flex items-start gap-2">
               <span
                 className={`px-2 py-1 rounded-lg text-xs font-semibold ${
@@ -265,7 +267,7 @@ export const TareaAgente = () => {
           <span className="flex items-center gap-2">
             <CalendarTodayIcon style={{ width: "20px" }} />
             <label>Asignada:</label>
-            <span className="">
+            <span>
               {tarea.fecha_inicio
                 ? format(
                     new Date(tarea.fecha_inicio),
@@ -280,7 +282,7 @@ export const TareaAgente = () => {
           <span className="flex items-center gap-2">
             <CalendarTodayIcon style={{ width: "20px" }} />
             <label>Fecha de entrega:</label>
-            <span className="">
+            <span>
               {tarea.fecha_de_entrega
                 ? format(
                     new Date(tarea.fecha_de_entrega),
@@ -293,22 +295,22 @@ export const TareaAgente = () => {
             </span>
           </span>
         </div>
-        <div className="flex justify-between">
+        <div className="flex flex-col sm:flex-row justify-between gap-4">
           <button
             onClick={comenzarTarea}
             disabled={!botonComenzarHabilitado}
-            className={`flex justify-center items-center py-2 px-6 gap-2 rounded-xl bg-green-600 hover:bg-green-700 text-white ${
+            className={`flex justify-center items-center py-2 px-6 gap-2 rounded-xl bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto ${
               !botonComenzarHabilitado ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             <PlayCircleOutlineIcon style={{ width: "20px", height: "20px" }} />
-            <span className="">Comenzar</span>
+            <span>Comenzar</span>
           </button>
 
           <button
             onClick={finalizarTarea}
             disabled={!botonFinalizarHabilitado}
-            className={`flex justify-center items-center py-2 px-6 gap-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white ${
+            className={`flex justify-center items-center py-2 px-6 gap-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white w-full sm:w-auto ${
               !botonFinalizarHabilitado ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
@@ -317,6 +319,7 @@ export const TareaAgente = () => {
           </button>
         </div>
       </div>
+
       <RevisionesAgente
         tareaId={id}
         revisiones={tarea.Revisions}
@@ -326,7 +329,7 @@ export const TareaAgente = () => {
       {modalVisible && (
         <ModalInformativo
           modalInfo={modalInfo}
-          onClose={() => setModalVisible(false)} // Pasar la función de cierre
+          onClose={() => setModalVisible(false)}
         />
       )}
     </div>

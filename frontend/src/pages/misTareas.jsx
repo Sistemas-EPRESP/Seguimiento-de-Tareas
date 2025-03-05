@@ -67,7 +67,7 @@ export default function MisTareas() {
 
   return (
     <div className="container mx-auto px-4">
-      <h1 className="text-3xl font-semibold mb-4">Mis tareas</h1>
+      <h1 className="text-2xl md:text-3xl font-semibold mb-4">Mis tareas</h1>
       <div className="grid grid-cols-2 border-b-2 border-b-slate-500 mb-4">
         <div className="">
           <input

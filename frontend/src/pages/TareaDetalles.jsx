@@ -336,7 +336,7 @@ export default function TareaDetalles() {
   };
 
   return (
-    <div className="grid grid-cols-8 auto-rows-min gap-5">
+    <div className="flex flex-col mt-10 gap-3 md:grid md:grid-cols-8 md:auto-rows-min md:gap-5 md:mt-0">
       <div
         id="MODIFICAR TAREA"
         className="bg-gray-800 p-4 rounded-xl text-gray-100 col-span-5"
@@ -559,19 +559,19 @@ export default function TareaDetalles() {
           >
             Finalizado
           </button>
-          <div className="flex gap-4 col-start-2">
+          <div className="flex gap-1 md:gap-4 col-start-2">
             <button
               type="submit"
-              className="bg-blue-500 w-full rounded-xl py-2 px-4 hover:bg-blue-600"
+              className="bg-blue-500 w-full rounded-xl py-2 px-1.5 md:px-4 hover:bg-blue-600"
             >
               Actualizar
             </button>
             <button
-              className="w-full bg-red-500 text-white py-2 rounded-xl hover:bg-red-700 transition-colors"
+              className="w-full bg-red-500 text-white py-2 px-2 md:px-0 rounded-xl hover:bg-red-700 transition-colors"
               onClick={() => setConfirmarEliminar(true)}
               type="button"
             >
-              Eliminar tarea
+              Eliminar
             </button>
           </div>
         </form>

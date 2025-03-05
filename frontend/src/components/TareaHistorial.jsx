@@ -42,7 +42,7 @@ export default function TareaHistorial({ historial, tiempos, estadoActual }) {
   };
 
   return (
-    <div className="grid grid-cols-8 gap-6 mt-6">
+    <div className="flex flex-col md:grid md:grid-cols-8 gap-6 mt-6">
       {/* Historial de movimientos */}
       <div className="col-span-5 bg-gray-800 rounded-lg p-6">
         <div className="flex items-center gap-2 mb-4">

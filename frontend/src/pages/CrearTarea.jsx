@@ -8,8 +8,6 @@ import { es } from "date-fns/locale";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 import config from "../api/config.js";
-import CloseIcon from "@mui/icons-material/Close";
-import SelectAgente from "../components/SelectAgente.jsx";
 import ModalInformativo from "../layout/ModalInformativo";
 import Loading from "../layout/Loading";
 import AgenteSeleccionado from "../components/AgenteSeleccionado";
@@ -145,10 +143,13 @@ export default function CrearTareas() {
     },
   });
   return (
-    <div className="flex justify-center items-center mt-10 px-60">
-      <div className="w-3/4 bg-gray-800 text-gray-100 rounded-lg p-8 shadow-2xl">
-        <h1 className="text-4xl mb-6 text-center">Tarea nueva</h1>
+    <div className="flex justify-center items-center mt-10 px-4 sm:px-10 md:px-20 lg:px-40 xl:px-60">
+      <div className="w-full max-w-4xl bg-gray-800 text-gray-100 rounded-lg p-6 sm:p-8 shadow-2xl">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl mb-6 text-center">
+          Tarea nueva
+        </h1>
         <form onSubmit={formik.handleSubmit} className="space-y-6">
+          {/* Campo Nombre */}
           <div>
             <label className="block text-sm font-medium mb-1">Nombre:</label>
             <input
@@ -162,6 +163,8 @@ export default function CrearTareas() {
               <p className="text-red-500 text-sm">{formik.errors.nombre}</p>
             )}
           </div>
+
+          {/* Selección de Agentes */}
           <div>
             <label className="block text-sm font-medium mb-1">Agentes:</label>
             <select
@@ -182,6 +185,8 @@ export default function CrearTareas() {
                 </p>
               )}
           </div>
+
+          {/* Lista de Agentes Seleccionados */}
           <div>
             {formik.values.agentesSeleccionados.length > 0 ? (
               formik.values.agentesSeleccionados.map((agente) => (
@@ -198,111 +203,40 @@ export default function CrearTareas() {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-5 ">
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-100">
-                Fecha de Inicio:
-              </label>
-              <DatePicker
-                selected={formik.values.fecha_inicio}
-                onChange={(date) => formik.setFieldValue("fecha_inicio", date)}
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={15}
-                dateFormat="dd/MM/yyyy HH:mm"
-                locale={es}
-                placeholderText="Selecciona fecha y hora de inicio"
-                className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
-                wrapperClassName="w-full"
-              />
-              {formik.touched.fecha_inicio && formik.errors.fecha_inicio && (
-                <p className="text-red-500 text-sm">
-                  {formik.errors.fecha_inicio}
-                </p>
-              )}
-            </div>
-
-            {/* Campo Fecha de Entrega */}
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-100">
-                Fecha de Entrega:
-              </label>
-              <DatePicker
-                selected={formik.values.fecha_de_entrega}
-                onChange={(date) =>
-                  formik.setFieldValue("fecha_de_entrega", date)
-                }
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={15}
-                dateFormat="dd/MM/yyyy HH:mm"
-                locale={es}
-                placeholderText="Selecciona fecha y hora de entrega"
-                className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
-                wrapperClassName="w-full"
-              />
-              {formik.touched.fecha_de_entrega &&
-                formik.errors.fecha_de_entrega && (
-                  <p className="text-red-500 text-sm">
-                    {formik.errors.fecha_de_entrega}
-                  </p>
+          {/* Fechas */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {[
+              { label: "Fecha de Inicio", name: "fecha_inicio" },
+              { label: "Fecha de Entrega", name: "fecha_de_entrega" },
+              { label: "Fecha Límite", name: "fecha_limite" },
+              { label: "Fecha de Vencimiento", name: "fecha_vencimiento" },
+            ].map(({ label, name }) => (
+              <div key={name}>
+                <label className="block text-sm font-medium mb-1">
+                  {label}:
+                </label>
+                <DatePicker
+                  selected={formik.values[name]}
+                  onChange={(date) => formik.setFieldValue(name, date)}
+                  showTimeSelect
+                  timeFormat="HH:mm"
+                  timeIntervals={15}
+                  dateFormat="dd/MM/yyyy HH:mm"
+                  locale={es}
+                  placeholderText={`Selecciona ${label.toLowerCase()}`}
+                  className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
+                  wrapperClassName="w-full"
+                />
+                {formik.touched[name] && formik.errors[name] && (
+                  <p className="text-red-500 text-sm">{formik.errors[name]}</p>
                 )}
-            </div>
-
-            {/* Campo Fecha Límite */}
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-100">
-                Fecha Límite:
-              </label>
-              <DatePicker
-                selected={formik.values.fecha_limite}
-                onChange={(date) => formik.setFieldValue("fecha_limite", date)}
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={15}
-                dateFormat="dd/MM/yyyy HH:mm"
-                locale={es}
-                placeholderText="Selecciona fecha y hora límite"
-                className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
-                wrapperClassName="w-full"
-              />
-              {formik.touched.fecha_limite && formik.errors.fecha_limite && (
-                <p className="text-red-500 text-sm">
-                  {formik.errors.fecha_limite}
-                </p>
-              )}
-            </div>
-
-            {/* Campo Fecha de Vencimiento */}
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-100">
-                Fecha de Vencimiento:
-              </label>
-              <DatePicker
-                selected={formik.values.fecha_vencimiento}
-                onChange={(date) =>
-                  formik.setFieldValue("fecha_vencimiento", date)
-                }
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={15}
-                dateFormat="dd/MM/yyyy HH:mm"
-                locale={es}
-                placeholderText="Selecciona fecha y hora de vencimiento"
-                className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
-                wrapperClassName="w-full"
-              />
-              {formik.touched.fecha_vencimiento &&
-                formik.errors.fecha_vencimiento && (
-                  <p className="text-red-500 text-sm">
-                    {formik.errors.fecha_vencimiento}
-                  </p>
-                )}
-            </div>
+              </div>
+            ))}
           </div>
 
+          {/* Descripción */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-100">
+            <label className="block text-sm font-medium mb-1">
               Descripción:
             </label>
             <textarea
@@ -315,15 +249,15 @@ export default function CrearTareas() {
           </div>
 
           {/* Prioridad y Estado */}
-          <div className="flex gap-5">
-            <div className="w-1/2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
               <Select
                 label="Prioridad"
                 opciones={["Alta", "Media", "Baja", "Periódica"]}
                 onChange={(value) => formik.setFieldValue("prioridad", value)}
                 value={formik.values.prioridad}
                 placeHolder="Seleccione la prioridad"
-                labelClassName="block text-sm font-medium mb-1 text-gray-100"
+                labelClassName="block text-sm font-medium mb-1"
                 selectClassName="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
               />
               {formik.touched.prioridad && formik.errors.prioridad && (
@@ -333,14 +267,14 @@ export default function CrearTareas() {
               )}
             </div>
 
-            <div className="w-1/2">
+            <div>
               <Select
                 label="Estado"
                 opciones={["Sin comenzar", "Bloqueado"]}
                 onChange={(value) => formik.setFieldValue("estado", value)}
                 value={formik.values.estado}
                 placeHolder="Seleccione un estado"
-                labelClassName="block text-sm font-medium mb-1 text-gray-100"
+                labelClassName="block text-sm font-medium mb-1"
                 selectClassName="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
               />
               {formik.touched.estado && formik.errors.estado && (
@@ -349,16 +283,19 @@ export default function CrearTareas() {
             </div>
           </div>
 
+          {/* Botón de Enviar */}
           <div className="w-full flex justify-end">
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="w-full sm:w-auto bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors"
             >
               Guardar
             </button>
           </div>
         </form>
       </div>
+
+      {/* Modales */}
       {modalVisible && (
         <ModalInformativo
           modalInfo={modalInfo}

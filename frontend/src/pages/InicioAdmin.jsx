@@ -120,11 +120,11 @@ export default function Inicio() {
 
   return (
     <div className="container mx-auto px-1">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-2 border-b-slate-500 mb-4 pb-4">
-        <h1 className="text-3xl font-semibold mb-4 md:mb-0">
+      <div className="flex flex-col items-end md:flex-row justify-between  md:items-center border-b-2 border-b-slate-500 mb-4 pb-4">
+        <h1 className="text-xl md:text-3xl font-semibold mb-4 md:mb-0">
           Hola {usuario?.agente?.nombre} {usuario?.agente?.apellido}!
         </h1>
-        <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
+        <div className="flex flex-row md:gap-0 gap-1 md:flex-row space-y-2 md:space-y-0 md:space-x-4">
           <h2 className="flex items-center">Filtrar por: </h2>
           <Filtro
             opciones={["Alta", "Media", "Baja", "Periódica"]}
@@ -189,11 +189,11 @@ export default function Inicio() {
 
       <button
         onClick={() => navigate("/crear-tarea")}
-        className="fixed bottom-8 right-8 bg-blue-600 text-white rounded-2xl px-4 py-3 shadow-lg hover:bg-blue-700 transition-colors"
+        className="fixed bottom-8 right-8 z-40 bg-blue-600 text-white rounded-2xl px-4 py-3 shadow-lg hover:bg-blue-700 transition-colors"
       >
         <div className="flex items-center">
           <AddCircleOutlineIcon />
-          <span className="ml-2">Crear Tarea</span>
+          <span className=" ml-2">Crear Tarea</span>
         </div>
       </button>
     </div>

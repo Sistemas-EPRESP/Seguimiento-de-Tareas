@@ -90,53 +90,58 @@ export default function Tareas() {
 
   return (
     <div>
-      <h1 className="text-3xl font-semibold mb-4">Buscador de Tareas</h1>
-      <div className="grid grid-cols-2 border-b-2 border-b-slate-500 mb-4">
-        <div className="">
-          <input
-            className="w-2/3 px-3 py-2 bg-gray-800 text-gray-100 rounded-lg focus:outline-none"
-            placeholder="Nombre, agente o fecha (YYYY-MM-DD)"
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          <button
-            className="bg-blue-500 rounded-xl py-2 px-4 hover:bg-blue-600 ml-2"
-            onClick={handleBuscar}
-          >
-            Buscar
-          </button>
-        </div>
-        <div className="flex justify-end space-x-4 mb-6">
-          <h2 className="flex items-center ">Filtrar por:</h2>
-          <Filtro
-            opciones={["Alta", "Media", "Baja", "Periódica"]}
-            onChange={(value) => setPrioridadFiltro(value)}
-            placeHolder={"Prioridad"}
-            labelClassName=""
-            selectClassName="w-full px-3 py-2 bg-gray-800 text-white rounded-lg focus:outline-none"
-          />
-          <Filtro
-            opciones={[
-              ...new Set(
-                agentes.map((agente) => `${agente.nombre} ${agente.apellido}`)
-              ),
-            ]}
-            onChange={(value) => setAgenteFiltro(value)}
-            placeHolder={"Agentes"}
-            selectClassName="w-full px-3 py-2 bg-gray-800 text-gray-100 rounded-lg focus:outline-none"
-          />
-          <Filtro
-            opciones={[
-              "Sin comenzar",
-              "Curso",
-              "Bloqueado",
-              "Revisión",
-              "Finalizado",
-            ]}
-            placeHolder={"Estado"}
-            onChange={(value) => setEstadoFiltro(value)}
-            selectClassName="w-full px-3 py-2 bg-gray-800 text-gray-100 rounded-lg focus:outline-none"
-          />
+      <div className="flex flex-col items-end">
+        <h1 className="text-2xl md:text-3xl font-semibold mb-4">
+          Buscador de Tareas
+        </h1>
+
+        <div className="flex flex-col gap-2 md:gap-0 md:grid md:grid-cols-2 border-b-2 border-b-slate-500 mb-4">
+          <div className="">
+            <input
+              className="w-2/3 px-3 py-2 bg-gray-800 text-gray-100 rounded-lg focus:outline-none"
+              placeholder="Nombre, agente o fecha (YYYY-MM-DD)"
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            <button
+              className="bg-blue-500 w-1/4 rounded-xl py-2 px-4 hover:bg-blue-600 ml-2"
+              onClick={handleBuscar}
+            >
+              Buscar
+            </button>
+          </div>
+          <div className="flex md:justify-end md:gap-0 gap-1 md:space-x-4 mb-6">
+            <h2 className="flex items-center ">Filtrar por:</h2>
+            <Filtro
+              opciones={["Alta", "Media", "Baja", "Periódica"]}
+              onChange={(value) => setPrioridadFiltro(value)}
+              placeHolder={"Prioridad"}
+              labelClassName=""
+              selectClassName="w-full px-3 py-2 bg-gray-800 text-white rounded-lg focus:outline-none"
+            />
+            <Filtro
+              opciones={[
+                ...new Set(
+                  agentes.map((agente) => `${agente.nombre} ${agente.apellido}`)
+                ),
+              ]}
+              onChange={(value) => setAgenteFiltro(value)}
+              placeHolder={"Agentes"}
+              selectClassName="w-full px-3 py-2 bg-gray-800 text-gray-100 rounded-lg focus:outline-none"
+            />
+            <Filtro
+              opciones={[
+                "Sin comenzar",
+                "Curso",
+                "Bloqueado",
+                "Revisión",
+                "Finalizado",
+              ]}
+              placeHolder={"Estado"}
+              onChange={(value) => setEstadoFiltro(value)}
+              selectClassName="w-full px-3 py-2 bg-gray-800 text-gray-100 rounded-lg focus:outline-none"
+            />
+          </div>
         </div>
       </div>
       <div>

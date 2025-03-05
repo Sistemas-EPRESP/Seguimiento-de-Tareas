@@ -66,13 +66,11 @@ export default function Timeline({ tarea }) {
   ];
 
   return (
-    <div className="mt-8 relative pb-16">
+    <div className="mt-8 relative pb-16 z-30">
       {/* Barra de progreso con segmentos */}
-      <div className="h-2 bg-gray-700 rounded-full overflow-hidden flex">
+      <div className="h-2 bg-gray-700 rounded-full overflow-hidden flex relative">
         {segments.map((segment, index) => {
           const width = getSegmentWidth(segment.start, segment.end);
-          const segmentProgress = (segment.progress * width) / 100;
-
           return (
             <div
               key={index}
@@ -89,9 +87,11 @@ export default function Timeline({ tarea }) {
       </div>
 
       {/* Contenedor para puntos y etiquetas */}
-      <div className="absolute w-full" style={{ top: "calc(0.5rem - 6px)" }}>
+      <div
+        className="absolute w-full z-0"
+        style={{ top: "calc(0.5rem - 6px)" }}
+      >
         {dates.map((item, index, array) => {
-          // Calcular la posición horizontal
           const position =
             index === 0
               ? 0
@@ -99,14 +99,11 @@ export default function Timeline({ tarea }) {
               ? 100
               : getSegmentWidth(inicio, item.date);
 
-          // Ajustar el transform para el primer y último elemento
           const translateX =
             index === 0 ? "0%" : index === array.length - 1 ? "-100%" : "-50%";
 
-          // Determinar si esta fecha debe mostrarse en la fila superior
           const isOffset = shouldOffsetDate(item.date, index, dates);
 
-          // Controlar que las 4 fechas sean iguales
           const allDatesEqual = dates.every((d) =>
             isSameDay(d.date, item.date)
           );
