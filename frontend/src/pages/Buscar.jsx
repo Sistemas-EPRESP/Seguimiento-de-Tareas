@@ -99,7 +99,7 @@ export default function Tareas() {
           <div className="">
             <input
               className="w-2/3 px-3 py-2 bg-gray-800 text-gray-100 rounded-lg focus:outline-none"
-              placeholder="Nombre o agente"
+              placeholder="Nombre de tarea o agente"
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
             />

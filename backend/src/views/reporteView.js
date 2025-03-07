@@ -27,6 +27,8 @@ const getTareasVencidas = (tareas) => {
   const now = new Date();
   return tareas.filter(
     (tarea) =>
+      (tarea.estado !== "Finalizado" &&
+        new Date(tarea.fecha_vencimiento) < now) ||
       ((tarea.estado === "Sin comenzar" || tarea.estado === "Curso") &&
         new Date(tarea.fecha_de_entrega) < now) ||
       (tarea.estado === "Correcciones" && new Date(tarea.fecha_limite) < now)
