@@ -72,6 +72,22 @@ export default function ReportesCard({ reportes, vencimientos }) {
         row.commit();
       });
 
+      // 📌 Agregar el total de cada corrección
+      const totalRowIndex = reportes.length + 2; // Fila después de los datos
+      const totalRow = wsCorrecciones.getRow(totalRowIndex);
+      totalRow.getCell(1).value = "Total";
+      totalRow.getCell(2).value = ""; // Celda vacía para el nombre del agente
+
+      categoriasCorrecciones.forEach((categoria, i) => {
+        const total = reportes.reduce(
+          (sum, tarea) => sum + (tarea.Correcciones[categoria] ?? 0),
+          0
+        );
+        totalRow.getCell(i + 3).value = total;
+      });
+
+      totalRow.commit();
+
       // 📌 Guardar el archivo
       const buffer = await wb.xlsx.writeBuffer();
       const blob = new Blob([buffer], {
@@ -83,7 +99,6 @@ export default function ReportesCard({ reportes, vencimientos }) {
       console.error("Error exportando Excel:", error);
     }
   };
-
   return (
     <div className="">
       {/* Total de tareas */}

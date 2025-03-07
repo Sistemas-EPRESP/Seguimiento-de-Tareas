@@ -90,7 +90,7 @@ export default function Tareas() {
 
   return (
     <div>
-      <div className="flex flex-col items-end">
+      <div className="flex flex-col items-end md:flex md:flex-col md:items-stretch ">
         <h1 className="text-2xl md:text-3xl font-semibold mb-4">
           Buscador de Tareas
         </h1>
@@ -99,12 +99,12 @@ export default function Tareas() {
           <div className="">
             <input
               className="w-2/3 px-3 py-2 bg-gray-800 text-gray-100 rounded-lg focus:outline-none"
-              placeholder="Nombre, agente o fecha (YYYY-MM-DD)"
+              placeholder="Nombre o agente"
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
             />
             <button
-              className="bg-blue-500 w-1/4 rounded-xl py-2 px-4 hover:bg-blue-600 ml-2"
+              className="bg-blue-500 w:1/4 md:w-1/6 rounded-xl py-2 px-4 hover:bg-blue-600 ml-2"
               onClick={handleBuscar}
             >
               Buscar

@@ -157,35 +157,16 @@ export default function Inicio() {
           />
         </div>
       </div>
-      <h1 className="text-3xl mb-6">Tareas para Hoy</h1>
+      <h1 className="text-3xl mb-6">Tareas activas</h1>
       <ul className="mb-8">
-        {todayTasks.length > 0 ? (
-          todayTasks.map((tarea) => <TareaCard key={tarea.id} tarea={tarea} />)
+        {tareas.length > 0 ? (
+          tareas
+            .filter(filtrarTareas)
+            .map((tarea) => <TareaCard key={tarea.id} tarea={tarea} />)
         ) : (
-          <p className="text-gray-500 mb-8">No hay tareas para hoy.</p>
+          <p className="text-gray-500 mb-8">No hay tareas disponibles.</p>
         )}
       </ul>
-
-      <h1 className="text-3xl mb-6">Tareas para esta semana</h1>
-      <ul>
-        {weekTasks.length > 0 ? (
-          weekTasks.map((tarea) => <TareaCard key={tarea.id} tarea={tarea} />)
-        ) : (
-          <p className="text-gray-500 mb-8">No hay tareas para esta semana.</p>
-        )}
-      </ul>
-      <h1 className="text-3xl mb-6">Tareas posteriores</h1>
-      {futureTasks.length > 0 ? (
-        <ul className="space-y-4">
-          {futureTasks.map((tarea) => (
-            <li key={tarea.id}>
-              <TareaCard tarea={tarea} />
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-gray-500 mb-8">No hay tareas futuras.</p>
-      )}
 
       <button
         onClick={() => navigate("/crear-tarea")}
