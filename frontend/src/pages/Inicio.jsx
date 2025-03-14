@@ -92,15 +92,11 @@ export default function Inicio() {
         <div>
           <h2 className="text-3xl mb-6">Tareas</h2>
           {tareas.length > 0 ? (
-            <ul className="space-y-4 mb-8">
-              {tareas.map((tarea) => (
-                <li key={tarea.id}>
-                  <TareaCardAgente tarea={tarea} />
-                </li>
-              ))}
-            </ul>
+            tareas
+              .filter(filtrarTareas)
+              .map((tarea) => <TareaCardAgente key={tarea.id} tarea={tarea} />)
           ) : (
-            <p className="text-gray-500 mb-8">No hay tareas.</p>
+            <p className="text-gray-500 mb-8">No hay tareas disponibles.</p>
           )}
         </div>
       )}

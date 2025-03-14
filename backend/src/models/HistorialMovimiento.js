@@ -1,16 +1,17 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
-const HistorialMovimiento = sequelize.define('HistorialMovimiento', {
+const HistorialMovimiento = sequelize.define("HistorialMovimiento", {
   tipo: {
     type: DataTypes.ENUM(
-      'Crear tarea',
-      'Inicio',
-      'Revisión',
-      'Corrección',
-      'Cambio de estado',
-      'Finalización',
-      'Modificación'
+      "Crear tarea",
+      "Cambio de plazo",
+      "Inicio",
+      "Revisión",
+      "Corrección",
+      "Cambio de estado",
+      "Finalización",
+      "Modificación"
     ),
     allowNull: false,
   },
@@ -25,8 +26,8 @@ const HistorialMovimiento = sequelize.define('HistorialMovimiento', {
   tareaId: {
     type: DataTypes.INTEGER,
     references: {
-      model: 'Tareas', // Relación con el modelo Tarea
-      key: 'id',
+      model: "Tareas", // Relación con el modelo Tarea
+      key: "id",
     },
     allowNull: false,
   },

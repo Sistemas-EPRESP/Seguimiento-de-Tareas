@@ -92,6 +92,39 @@ export default function TareaDetalles() {
     validationSchema,
     onSubmit: async (values) => {
       setLoadingOpen(true);
+      var notificacion = {};
+      var historial = {};
+      if (tarea.fecha_de_entrega !== values.fecha_de_entrega) {
+        notificacion = {
+          titulo: "Cambio de plazo",
+          mensaje: `El plazo de entrega de la tarea a sido cambiado para el día ${format(
+            values.fecha_de_entrega,
+            "dd/MM/yyyy"
+          )}`,
+        };
+        await axios.post(
+          `${config.apiUrl}/tareas/${id}/notificar`,
+          notificacion,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        historial = {
+          tipo: "Cambio de plazo",
+          descripcion: `El plazo de entrega de la tarea a sido cambiado para el ${format(
+            values.fecha_de_entrega,
+            "EEEE d 'de' MMMM",
+            { locale: es }
+          )}`,
+        };
+        await axios.post(`${config.apiUrl}/tareas/${id}/historial`, historial, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
 
       const formattedData = {
         ...values,
@@ -145,9 +178,14 @@ export default function TareaDetalles() {
           agentesSeleccionados: data.Agentes || [],
         });
 
-        // Verificar notificaciones pendientes
-        if (data.Notificacions?.some((n) => n.estado === "Pendiente")) {
-          setNotificacionPendiente(true);
+        const notificacionPendiente = data.Notificacions?.find(
+          (n) =>
+            n.estado === "Pendiente" &&
+            (n.titulo === "Finalizacion de correcciones" ||
+              n.titulo === "Finalizacion de tarea")
+        );
+        if (notificacionPendiente) {
+          setNotificacionPendiente(notificacionPendiente);
         }
 
         setTarea(data);
@@ -599,6 +637,8 @@ export default function TareaDetalles() {
       {notificacionPendiente && (
         <ModalNotificacion
           visible={notificacionPendiente}
+          titulo={"Confirmar Entrega"}
+          descripcion={"¿Deseas confirmar que la tarea fue entregada?"}
           onConfirm={confirmarEntrega}
           onCancel={() => setNotificacionPendiente(false)}
         />

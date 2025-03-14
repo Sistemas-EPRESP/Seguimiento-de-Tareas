@@ -4,18 +4,20 @@ import axios from "axios";
 import config from "../api/config";
 import Loading from "../layout/Loading";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import { format } from "date-fns";
+import { format, set } from "date-fns";
 import { es } from "date-fns/locale";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import RevisionesAgente from "../components/RevisionesAgente";
 import ModalInformativo from "../layout/ModalInformativo";
+import ModalNotificacion from "../layout/ModalNotificacion";
 
 export const TareaAgente = () => {
   const { id } = useParams();
   const token = localStorage.getItem("token");
   const [tarea, setTarea] = useState(null);
   const [cargando, setCargando] = useState(false);
+  const [notificacionPendiente, setNotificacionPendiente] = useState(false);
   const [botonFinalizarHabilitado, setBotonFinalizarHabilitado] =
     useState(false);
   const [botonComenzarHabilitado, setBotonComenzarHabilitado] = useState(false);
@@ -52,9 +54,16 @@ export const TareaAgente = () => {
           Authorization: `Bearer ${token}`,
         },
       });
+      const notificacionPendiente = data.Notificacions?.find(
+        (n) => n.estado === "Pendiente" && n.titulo === "Cambio de plazo"
+      );
+      if (notificacionPendiente) {
+        setNotificacionPendiente(notificacionPendiente);
+      }
 
       setTarea(data);
       setBotonFinalizarHabilitado(verificarFinalizar(data));
+      //setBotonFinalizarHabilitado(true);
       setBotonComenzarHabilitado(verificarComenzar(data));
     } catch (error) {
       console.error("Error al obtener los detalles de la tarea", error);
@@ -221,6 +230,65 @@ export const TareaAgente = () => {
     }
   };
 
+  const confirmarEntrega = async () => {
+    const estado = { estado: "Revisión" };
+    const notificacion = {
+      idNotificacion: tarea.Notificacions[0].id,
+      estado: "Aceptada",
+    };
+    try {
+      const { data } = await axios.put(
+        `${config.apiUrl}/tareas/${id}/cambiarEstado`,
+        estado,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const resp = await axios.put(
+        `${config.apiUrl}/tareas/${id}/confirmarNotificacion`,
+        notificacion,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const historial = {
+        tipo: "Revisión",
+        descripcion: "La tarea se encuentra en proceso de revisión",
+      };
+      const resp2 = await axios.post(
+        `${config.apiUrl}/tareas/${id}/historial`,
+        historial,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setActualizarTarea((prev) => !prev);
+      setModalInfo({
+        tipo: "Exito",
+        titulo: "Operación exitosa",
+        mensaje: "Haz aceptado el cambio de plazo!",
+      });
+    } catch (error) {
+      console.error(error);
+      setModalInfo({
+        tipo: "Error",
+        titulo: "Error de servidor",
+        mensaje: "No se pudo completar esta acción!",
+      });
+    } finally {
+      setNotificacionPendiente(false);
+      setCargando(false);
+      setModalVisible(true);
+    }
+  };
+
   const handleCorreccionesEnviadas = () => {
     fetchTareaData();
   };
@@ -315,7 +383,7 @@ export const TareaAgente = () => {
             }`}
           >
             <CheckCircleOutlineIcon style={{ width: "20px", height: "20px" }} />
-            <span>Finalizar Tarea</span>
+            <span>Entregar tarea</span>
           </button>
         </div>
       </div>
@@ -330,6 +398,19 @@ export const TareaAgente = () => {
         <ModalInformativo
           modalInfo={modalInfo}
           onClose={() => setModalVisible(false)}
+        />
+      )}
+      {notificacionPendiente && (
+        <ModalNotificacion
+          visible={notificacionPendiente}
+          titulo={"Cambio de plazo"}
+          descripcion={`El plazo de entrega de la tarea ha sido modificado para el día ${format(
+            tarea.fecha_de_entrega,
+            "EEEE d 'de' MMMM",
+            { locale: es }
+          )}`}
+          onConfirm={confirmarEntrega}
+          onCancel={() => setNotificacionPendiente(false)}
         />
       )}
     </div>

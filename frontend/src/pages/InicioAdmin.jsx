@@ -88,32 +88,6 @@ export default function Inicio() {
   );
 
   useEffect(() => {
-    const hoy = new Date();
-    const finDeSemana = addDays(hoy, 7);
-
-    const tareasHoy = tareas.filter(
-      (tarea) =>
-        isToday(parseISO(tarea.fecha_vencimiento)) && filtrarTareas(tarea)
-    );
-
-    const tareasSemana = tareas.filter(
-      (tarea) =>
-        isThisWeek(parseISO(tarea.fecha_vencimiento)) &&
-        !isToday(parseISO(tarea.fecha_vencimiento)) &&
-        filtrarTareas(tarea)
-    );
-
-    const tareasFuturas = tareas.filter(
-      (tarea) =>
-        parseISO(tarea.fecha_vencimiento) > finDeSemana && filtrarTareas(tarea)
-    );
-
-    setTodayTasks(tareasHoy);
-    setWeekTasks(tareasSemana);
-    setFutureTasks(tareasFuturas);
-  }, [tareas, filtrarTareas]);
-
-  useEffect(() => {
     obtenerTareas();
     obtenerAgentes(); // Llamamos a la función para obtener los agentes
   }, []);
@@ -146,10 +120,11 @@ export default function Inicio() {
           <Filtro
             opciones={[
               "Sin comenzar",
-              "En curso",
-              "Bloqueado",
-              "Completa",
-              "En revisión",
+              "Curso",
+              "Bloqueada",
+              "Corrección",
+              "Revisión",
+              "Finalizado",
             ]}
             placeHolder={"Estado"}
             onChange={(value) => setEstadoFiltro(value)}
