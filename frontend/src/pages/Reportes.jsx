@@ -11,6 +11,7 @@ export default function Reportes() {
   const [loading, setLoading] = useState(false);
   const [reportes, setReportes] = useState(null);
   const [vencimientos, setVencimientos] = useState(null);
+  const [tareasEstados, setTareasEstados] = useState(null);
 
   const obtenerAgentes = async () => {
     setLoading(true);
@@ -61,6 +62,19 @@ export default function Reportes() {
           },
         });
         const response = await axios.get(
+          `${config.apiUrl}/reportes/tareasEstados`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            params: {
+              agente: values.agenteSeleccionado || "todos",
+              periodo: values.periodoSeleccionado,
+            },
+          }
+        );
+
+        const vencimientosResponse = await axios.get(
           `${config.apiUrl}/reportes/vencimientos`,
           {
             headers: {
@@ -72,11 +86,13 @@ export default function Reportes() {
             },
           }
         );
+
         console.log(response.data);
         console.log(data);
 
         setReportes(data); // Guardamos las tareas en el state
-        setVencimientos(response.data);
+        setVencimientos(vencimientosResponse.data);
+        setTareasEstados(response.data);
       } catch (error) {
         console.error("Error al generar el reporte", error);
       } finally {
@@ -140,7 +156,11 @@ export default function Reportes() {
       ) : null}
       <Loading isVisible={loading} />
       {reportes && (
-        <ReportesCard reportes={reportes} vencimientos={vencimientos} />
+        <ReportesCard
+          reportes={reportes}
+          tareasEstados={tareasEstados}
+          vencimientos={vencimientos}
+        />
       )}
     </div>
   );

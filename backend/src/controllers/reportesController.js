@@ -23,6 +23,19 @@ exports.getReportesVencimientos = async (req, res) => {
     const { inicio, fin } = obtenerFechasPeriodo(periodo);
     const tareas = await TareaView.getReporteAgente(agente, inicio, fin);
 
+    const reportesTotal = ReporteView.getTareasVencidas(tareas);
+    return res.status(200).json(reportesTotal);
+  } catch (error) {
+    res.status(500).json({ error: "Error al generar el reporte" });
+  }
+};
+
+exports.getReportesTareasEstados = async (req, res) => {
+  try {
+    const { agente, periodo } = req.query;
+    const { inicio, fin } = obtenerFechasPeriodo(periodo);
+    const tareas = await TareaView.getReporteAgente(agente, inicio, fin);
+
     const reportesTotal = ReporteView.clasificarTareas(tareas);
     return res.status(200).json(reportesTotal);
   } catch (error) {
