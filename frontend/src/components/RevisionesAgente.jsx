@@ -198,7 +198,7 @@ export default function Component({
           onClick={handleEnviarCambios}
           disabled={!hasRevisiones || !revisarChecks}
         >
-          Enviar correcciones
+          Guardar
         </button>
       </div>
       {loadingOpen && <Loading />}

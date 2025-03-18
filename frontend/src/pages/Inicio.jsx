@@ -45,6 +45,8 @@ export default function Inicio() {
             },
           }
         );
+        console.log(data);
+
         setTareas(data);
       } catch (error) {
         console.error("Error al obtener las tareas", error);

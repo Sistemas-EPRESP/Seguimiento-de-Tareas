@@ -89,6 +89,8 @@ export default function CrearRevision({
           },
         }
       );
+      var notificacion = {};
+
       onRevisionCreada(response.data);
       onActualizar();
       setModalInfo({

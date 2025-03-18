@@ -23,7 +23,10 @@ export default function TareaCard({ tarea }) {
   };
 
   const hayNotificacionesPendientes = tarea?.Notificacions?.some(
-    (notificacion) => notificacion.estado === "Pendiente"
+    (notificacion) =>
+      notificacion.estado === "Pendiente" &&
+      (notificacion.titulo === "Finalizacion de tarea" ||
+        notificacion.titulo === "Finalizacion de correcciones")
   );
 
   return (

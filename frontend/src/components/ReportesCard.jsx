@@ -115,17 +115,43 @@ export default function ReportesCard({ reportes, vencimientos }) {
           <h4 className="text-lg font-semibold text-gray-300">
             Tareas por Estado
           </h4>
-          <div className="flex justify-between mt-2">
-            <p className="text-gray-300">En progreso:</p>
-            <p className="font-semibold text-white">
-              {vencimientos.tareasActivas.length}
-            </p>
-          </div>
-          <div className="flex justify-between mt-1">
-            <p className="text-gray-300">Completadas:</p>
-            <p className="font-semibold text-white">
-              {vencimientos.tareasCompletadas.length}
-            </p>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex justify-between">
+              <p className="text-gray-300">Sin comenzar:</p>
+              <p className="font-semibold text-white">
+                {vencimientos.tareasActivas.length}
+              </p>
+            </div>
+            <div className="flex justify-between">
+              <p className="text-gray-300">Curso:</p>
+              <p className="font-semibold text-white">
+                {vencimientos.tareasCompletadas.length}
+              </p>
+            </div>
+            <div className="flex justify-between">
+              <p className="text-gray-300">Revisión:</p>
+              <p className="font-semibold text-white">
+                {vencimientos.tareasCompletadas.length}
+              </p>
+            </div>
+            <div className="flex justify-between">
+              <p className="text-gray-300">Corrección:</p>
+              <p className="font-semibold text-white">
+                {vencimientos.tareasCompletadas.length}
+              </p>
+            </div>
+            <div className="flex justify-between">
+              <p className="text-gray-300">Bloqueada:</p>
+              <p className="font-semibold text-white">
+                {vencimientos.tareasCompletadas.length}
+              </p>
+            </div>
+            <div className="flex justify-between">
+              <p className="text-gray-300">Completada:</p>
+              <p className="font-semibold text-white">
+                {vencimientos.tareasCompletadas.length}
+              </p>
+            </div>
           </div>
         </div>
 

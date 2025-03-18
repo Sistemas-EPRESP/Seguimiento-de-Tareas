@@ -24,9 +24,11 @@ export default function TareaCard({ tarea }) {
     Finalizado: "bg-[#10B981] text-white",
   };
 
-  // Verificar si hay notificaciones pendientes
-  const hayNotificacionesPendientes = tarea?.Notificacions?.some(
-    (notificacion) => notificacion.estado === "Pendiente"
+  // Verificar si hay notificaciones pendientes del tipo "Cambio de plazo"
+  const hayNotificacionesCambioPlazo = tarea?.Notificacions?.some(
+    (notificacion) =>
+      notificacion.estado === "Pendiente" &&
+      notificacion.titulo === "Cambio de plazo"
   );
 
   return (
@@ -37,7 +39,7 @@ export default function TareaCard({ tarea }) {
       <div className="flex justify-between items-start relative">
         <h2 className="text-xl font-semibold flex items-center">
           {tarea.nombre}
-          {hayNotificacionesPendientes && (
+          {hayNotificacionesCambioPlazo && (
             <NotificationsActiveIcon
               className="ml-2 text-yellow-500"
               style={{ fontSize: "20px" }}
