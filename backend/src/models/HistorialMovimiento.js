@@ -7,6 +7,7 @@ const HistorialMovimiento = sequelize.define("HistorialMovimiento", {
       "Crear tarea",
       "Cambio de plazo",
       "Inicio",
+      "Curso",
       "Revisión",
       "Corrección",
       "Cambio de estado",

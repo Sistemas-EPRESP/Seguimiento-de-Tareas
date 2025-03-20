@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import config from "../api/config";
 import { es } from "date-fns/locale";
@@ -15,10 +15,13 @@ import TareaHistorial from "../components/TareaHistorial";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import ModalConfirmacion from "../layout/ModalConfirmacion";
+import { AuthContext } from "../context/AuthContext";
+import { TareaAgente } from "./TareaAgente";
 
 export default function TareaDetalles() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { usuario, loading } = useContext(AuthContext);
   const [notificacionPendiente, setNotificacionPendiente] = useState(false);
   const [actualizarTarea, setActualizarTarea] = useState(false);
 
@@ -47,6 +50,7 @@ export default function TareaDetalles() {
   const [cargando, setCargando] = useState(false);
   const token = localStorage.getItem("token");
   const [confirmarEliminar, setConfirmarEliminar] = useState(false);
+  const [modoVista, setModoVista] = useState("Administrador");
 
   const validationSchema = Yup.object().shape({
     nombre: Yup.string().required("El nombre es obligatorio"),
@@ -137,6 +141,31 @@ export default function TareaDetalles() {
             Authorization: `Bearer ${token}`,
           },
         });
+        if (tarea.estado !== values.estado) {
+          const estado = { estado: values.estado };
+          historial = {
+            tipo: values.estado,
+            descripcion: `El estado de la tarea ha sido cambiado a ${values.estado}`,
+          };
+          await axios.post(
+            `${config.apiUrl}/tareas/${id}/historial`,
+            historial,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          const { data } = await axios.put(
+            `${config.apiUrl}/tareas/${id}/cambiarEstado`,
+            estado,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+        }
         setActualizarTarea((prev) => !prev);
         setModalInfo({
           tipo: "Exito",
@@ -314,7 +343,8 @@ export default function TareaDetalles() {
     }
   };
 
-  const confirmarEntrega = async () => {
+  const confirmarEntrega = async (e) => {
+    e.preventDefault();
     const estado = { estado: "Revisión" };
     const notificacion = {
       idNotificacion: tarea.Notificacions[0].id,
@@ -374,288 +404,328 @@ export default function TareaDetalles() {
   };
 
   return (
-    <div className="flex flex-col mt-10 gap-3 md:grid md:grid-cols-8 md:auto-rows-min md:gap-5 md:mt-0">
-      <div
-        id="MODIFICAR TAREA"
-        className="bg-gray-800 p-4 rounded-xl text-gray-100 col-span-5"
-      >
-        <h1 className="text-3xl font-semibold mb-4">Modificar Tarea</h1>
-        <form onSubmit={formik.handleSubmit} className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Nombre:</label>
-            <input
-              type="text"
-              name="nombre"
-              value={formik.values.nombre}
-              onChange={formik.handleChange}
-              className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
-            />
-            {formik.touched.nombre && formik.errors.nombre && (
-              <p className="text-red-500 text-sm">{formik.errors.nombre}</p>
-            )}
-          </div>
+    <>
+      {usuario?.rol === "Administrador" && (
+        <div className="fixed bottom-4 right-4">
+          <button
+            onClick={() =>
+              setModoVista(
+                (prevModo) =>
+                  prevModo === "Administrador" ? "Agente" : "Administrador",
+                setActualizarTarea((prev) => !prev)
+              )
+            }
+            className="bg-blue-500 text-white rounded-full p-4 shadow-lg hover:bg-blue-700 transition-colors"
+          >
+            Cambiar a modo{" "}
+            {modoVista === "Administrador" ? "Agente" : "Administrador"}
+          </button>
+        </div>
+      )}
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Prioridad:</label>
-            <select
-              name="prioridad"
-              value={formik.values.prioridad}
-              onChange={formik.handleChange}
-              className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
+      {modoVista === "Administrador" ? (
+        <div className="flex flex-col mt-10 gap-3 md:grid md:grid-cols-8 md:auto-rows-min md:gap-5 md:mt-0">
+          <div
+            id="MODIFICAR TAREA"
+            className="bg-gray-800 p-4 rounded-xl text-gray-100 col-span-5"
+          >
+            <h1 className="text-3xl font-semibold mb-4">Modificar Tarea</h1>
+            <form
+              onSubmit={formik.handleSubmit}
+              className="grid grid-cols-2 gap-4"
             >
-              <option value="">Seleccionar prioridad</option>
-              <option value="Alta">Alta</option>
-              <option value="Media">Media</option>
-              <option value="Baja">Baja</option>
-              <option value="Periódica">Periódica</option>
-            </select>
-            {formik.touched.prioridad && formik.errors.prioridad && (
-              <p className="text-red-500 text-sm">{formik.errors.prioridad}</p>
-            )}
-          </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Nombre:
+                </label>
+                <input
+                  type="text"
+                  name="nombre"
+                  value={formik.values.nombre}
+                  onChange={formik.handleChange}
+                  className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
+                />
+                {formik.touched.nombre && formik.errors.nombre && (
+                  <p className="text-red-500 text-sm">{formik.errors.nombre}</p>
+                )}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Estado:</label>
-            <select
-              name="estado"
-              value={formik.values.estado}
-              onChange={formik.handleChange}
-              className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
-            >
-              <option value="">Seleccionar estado</option>
-              <option value="Sin comenzar">Sin comenzar</option>
-              <option value="Curso">Curso</option>
-              <option value="Corrección">Corrección</option>
-              <option value="Bloqueado">Bloqueado</option>
-              <option value="Finalizado">Finalizado</option>
-              <option value="Revisión">Revisión</option>
-            </select>
-            {formik.touched.estado && formik.errors.estado && (
-              <p className="text-red-500 text-sm">{formik.errors.estado}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Fecha de Inicio:
-            </label>
-            <DatePicker
-              selected={formik.values.fecha_inicio}
-              onChange={(date) => formik.setFieldValue("fecha_inicio", date)}
-              showTimeSelect
-              timeFormat="HH:mm"
-              timeIntervals={15}
-              dateFormat="dd/MM/yyyy HH:mm"
-              locale={es}
-              placeholderText="Selecciona fecha y hora de inicio"
-              className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
-              wrapperClassName="w-full"
-            />
-            {formik.touched.fecha_inicio && formik.errors.fecha_inicio && (
-              <p className="text-red-500 text-sm">
-                {formik.errors.fecha_inicio}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Fecha de Entrega:
-            </label>
-            <DatePicker
-              selected={formik.values.fecha_de_entrega}
-              onChange={(date) =>
-                formik.setFieldValue("fecha_de_entrega", date)
-              }
-              showTimeSelect
-              timeFormat="HH:mm"
-              timeIntervals={15}
-              dateFormat="dd/MM/yyyy HH:mm"
-              locale={es}
-              placeholderText="Selecciona fecha y hora de entrega"
-              className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
-              wrapperClassName="w-full"
-            />
-            {formik.touched.fecha_de_entrega &&
-              formik.errors.fecha_de_entrega && (
-                <p className="text-red-500 text-sm">
-                  {formik.errors.fecha_de_entrega}
-                </p>
-              )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Fecha Límite:
-            </label>
-            <DatePicker
-              selected={formik.values.fecha_limite}
-              onChange={(date) => formik.setFieldValue("fecha_limite", date)}
-              showTimeSelect
-              timeFormat="HH:mm"
-              timeIntervals={15}
-              dateFormat="dd/MM/yyyy HH:mm"
-              locale={es}
-              placeholderText="Selecciona fecha y hora límite"
-              className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
-              wrapperClassName="w-full"
-            />
-            {formik.touched.fecha_limite && formik.errors.fecha_limite && (
-              <p className="text-red-500 text-sm">
-                {formik.errors.fecha_limite}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Fecha de Vencimiento:
-            </label>
-            <DatePicker
-              selected={formik.values.fecha_vencimiento}
-              onChange={(date) =>
-                formik.setFieldValue("fecha_vencimiento", date)
-              }
-              showTimeSelect
-              timeFormat="HH:mm"
-              timeIntervals={15}
-              dateFormat="dd/MM/yyyy HH:mm"
-              locale={es}
-              placeholderText="Selecciona fecha y hora de vencimiento"
-              className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
-              wrapperClassName="w-full"
-            />
-            {formik.touched.fecha_vencimiento &&
-              formik.errors.fecha_vencimiento && (
-                <p className="text-red-500 text-sm">
-                  {formik.errors.fecha_vencimiento}
-                </p>
-              )}
-          </div>
-
-          <div className="col-span-1">
-            <label className="block text-sm font-medium mb-2">Agentes:</label>
-            <select
-              onChange={handleAgregarAgente}
-              className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
-            >
-              <option value="">Seleccionar agente</option>
-              {todosAgentes.map((agente) => (
-                <option key={agente.id} value={agente.id}>
-                  {agente.nombre} {agente.apellido}
-                </option>
-              ))}
-            </select>
-            {formik.touched.agentesSeleccionados &&
-              formik.errors.agentesSeleccionados && (
-                <p className="text-red-500 text-sm">
-                  {formik.errors.agentesSeleccionados}
-                </p>
-              )}
-          </div>
-
-          <div className="col-span-1">
-            <label className="block text-sm font-medium mb-2">
-              Descripción:
-            </label>
-            <textarea
-              name="descripcion"
-              value={formik.values.descripcion}
-              onChange={formik.handleChange}
-              className="w-full px-3 py-2 min-h-10 max-h-60 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
-              rows="4"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2 text-gray-100">
-              Agentes seleccionados:
-            </label>
-            <div
-              id="Mostrar agentes"
-              className="p-2 bg-gray-700 rounded-md h-[112px] overflow-y-auto"
-            >
-              <div className="flex flex-wrap gap-2">
-                {formik.values.agentesSeleccionados.length > 0 ? (
-                  formik.values.agentesSeleccionados.map((agente) => (
-                    <AgenteSeleccionado
-                      key={agente.id}
-                      agente={agente}
-                      onRemove={() => handleEliminarAgente(agente.id)}
-                    />
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500">
-                    No hay agentes seleccionados.
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Prioridad:
+                </label>
+                <select
+                  name="prioridad"
+                  value={formik.values.prioridad}
+                  onChange={formik.handleChange}
+                  className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
+                >
+                  <option value="">Seleccionar prioridad</option>
+                  <option value="Alta">Alta</option>
+                  <option value="Media">Media</option>
+                  <option value="Baja">Baja</option>
+                  <option value="Periódica">Periódica</option>
+                </select>
+                {formik.touched.prioridad && formik.errors.prioridad && (
+                  <p className="text-red-500 text-sm">
+                    {formik.errors.prioridad}
                   </p>
                 )}
               </div>
-            </div>
-          </div>
-          <button
-            className="bg-green-500 w-full rounded-xl py-2 px-4 hover:bg-green-600"
-            onClick={finalizarTarea}
-          >
-            Finalizado
-          </button>
-          <div className="flex gap-1 md:gap-4 col-start-2">
-            <button
-              type="submit"
-              className="bg-blue-500 w-full rounded-xl py-2 px-1.5 md:px-4 hover:bg-blue-600"
-            >
-              Actualizar
-            </button>
-            <button
-              className="w-full bg-red-500 text-white py-2 px-2 md:px-0 rounded-xl hover:bg-red-700 transition-colors"
-              onClick={() => setConfirmarEliminar(true)}
-              type="button"
-            >
-              Eliminar
-            </button>
-          </div>
-        </form>
-      </div>
-      <div className="col-span-3">
-        {tarea && (
-          <Revisiones
-            tareaId={id}
-            tarea={tarea}
-            revisiones={tarea.Revisions}
-            onActualizar={() => setActualizarTarea((prev) => !prev)}
-          />
-        )}
-      </div>
 
-      <div className="col-span-8">
-        {tarea && (
-          <TareaHistorial
-            historial={tarea.HistorialMovimientos}
-            tiempos={tarea.TareaEstadoTiempos}
-            estadoActual={tarea.estado}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Estado:
+                </label>
+                <select
+                  name="estado"
+                  value={formik.values.estado}
+                  onChange={formik.handleChange}
+                  className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
+                >
+                  <option value="">Seleccionar estado</option>
+                  <option value="Sin comenzar">Sin comenzar</option>
+                  <option value="Curso">Curso</option>
+                  <option value="Corrección">Corrección</option>
+                  <option value="Bloqueado">Bloqueado</option>
+                  <option value="Finalizado">Finalizado</option>
+                  <option value="Revisión">Revisión</option>
+                </select>
+                {formik.touched.estado && formik.errors.estado && (
+                  <p className="text-red-500 text-sm">{formik.errors.estado}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Fecha de Inicio:
+                </label>
+                <DatePicker
+                  selected={formik.values.fecha_inicio}
+                  onChange={(date) =>
+                    formik.setFieldValue("fecha_inicio", date)
+                  }
+                  showTimeSelect
+                  timeFormat="HH:mm"
+                  timeIntervals={15}
+                  dateFormat="dd/MM/yyyy HH:mm"
+                  locale={es}
+                  placeholderText="Selecciona fecha y hora de inicio"
+                  className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
+                  wrapperClassName="w-full"
+                />
+                {formik.touched.fecha_inicio && formik.errors.fecha_inicio && (
+                  <p className="text-red-500 text-sm">
+                    {formik.errors.fecha_inicio}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Fecha de Entrega:
+                </label>
+                <DatePicker
+                  selected={formik.values.fecha_de_entrega}
+                  onChange={(date) =>
+                    formik.setFieldValue("fecha_de_entrega", date)
+                  }
+                  showTimeSelect
+                  timeFormat="HH:mm"
+                  timeIntervals={15}
+                  dateFormat="dd/MM/yyyy HH:mm"
+                  locale={es}
+                  placeholderText="Selecciona fecha y hora de entrega"
+                  className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
+                  wrapperClassName="w-full"
+                />
+                {formik.touched.fecha_de_entrega &&
+                  formik.errors.fecha_de_entrega && (
+                    <p className="text-red-500 text-sm">
+                      {formik.errors.fecha_de_entrega}
+                    </p>
+                  )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Fecha Límite:
+                </label>
+                <DatePicker
+                  selected={formik.values.fecha_limite}
+                  onChange={(date) =>
+                    formik.setFieldValue("fecha_limite", date)
+                  }
+                  showTimeSelect
+                  timeFormat="HH:mm"
+                  timeIntervals={15}
+                  dateFormat="dd/MM/yyyy HH:mm"
+                  locale={es}
+                  placeholderText="Selecciona fecha y hora límite"
+                  className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
+                  wrapperClassName="w-full"
+                />
+                {formik.touched.fecha_limite && formik.errors.fecha_limite && (
+                  <p className="text-red-500 text-sm">
+                    {formik.errors.fecha_limite}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Fecha de Vencimiento:
+                </label>
+                <DatePicker
+                  selected={formik.values.fecha_vencimiento}
+                  onChange={(date) =>
+                    formik.setFieldValue("fecha_vencimiento", date)
+                  }
+                  showTimeSelect
+                  timeFormat="HH:mm"
+                  timeIntervals={15}
+                  dateFormat="dd/MM/yyyy HH:mm"
+                  locale={es}
+                  placeholderText="Selecciona fecha y hora de vencimiento"
+                  className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg"
+                  wrapperClassName="w-full"
+                />
+                {formik.touched.fecha_vencimiento &&
+                  formik.errors.fecha_vencimiento && (
+                    <p className="text-red-500 text-sm">
+                      {formik.errors.fecha_vencimiento}
+                    </p>
+                  )}
+              </div>
+
+              <div className="col-span-1">
+                <label className="block text-sm font-medium mb-2">
+                  Agentes:
+                </label>
+                <select
+                  onChange={handleAgregarAgente}
+                  className="w-full px-3 py-2 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
+                >
+                  <option value="">Seleccionar agente</option>
+                  {todosAgentes.map((agente) => (
+                    <option key={agente.id} value={agente.id}>
+                      {agente.nombre} {agente.apellido}
+                    </option>
+                  ))}
+                </select>
+                {formik.touched.agentesSeleccionados &&
+                  formik.errors.agentesSeleccionados && (
+                    <p className="text-red-500 text-sm">
+                      {formik.errors.agentesSeleccionados}
+                    </p>
+                  )}
+              </div>
+
+              <div className="col-span-1">
+                <label className="block text-sm font-medium mb-2">
+                  Descripción:
+                </label>
+                <textarea
+                  name="descripcion"
+                  value={formik.values.descripcion}
+                  onChange={formik.handleChange}
+                  className="w-full px-3 py-2 min-h-10 max-h-60 bg-gray-700 text-gray-100 rounded-lg focus:outline-none"
+                  rows="4"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-100">
+                  Agentes seleccionados:
+                </label>
+                <div
+                  id="Mostrar agentes"
+                  className="p-2 bg-gray-700 rounded-md h-[112px] overflow-y-auto"
+                >
+                  <div className="flex flex-wrap gap-2">
+                    {formik.values.agentesSeleccionados.length > 0 ? (
+                      formik.values.agentesSeleccionados.map((agente) => (
+                        <AgenteSeleccionado
+                          key={agente.id}
+                          agente={agente}
+                          onRemove={() => handleEliminarAgente(agente.id)}
+                        />
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        No hay agentes seleccionados.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <button
+                className="bg-green-500 w-full rounded-xl py-2 px-4 hover:bg-green-600"
+                onClick={finalizarTarea}
+              >
+                Finalizado
+              </button>
+              <div className="flex gap-1 md:gap-4 col-start-2">
+                <button
+                  type="submit"
+                  className="bg-blue-500 w-full rounded-xl py-2 px-1.5 md:px-4 hover:bg-blue-600"
+                >
+                  Actualizar
+                </button>
+                <button
+                  className="w-full bg-red-500 text-white py-2 px-2 md:px-0 rounded-xl hover:bg-red-700 transition-colors"
+                  onClick={() => setConfirmarEliminar(true)}
+                  type="button"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </form>
+          </div>
+          <div className="col-span-3">
+            {tarea && (
+              <Revisiones
+                tareaId={id}
+                tarea={tarea}
+                revisiones={tarea.Revisions}
+                onActualizar={() => setActualizarTarea((prev) => !prev)}
+              />
+            )}
+          </div>
+          <div className="col-span-8">
+            {tarea && (
+              <TareaHistorial
+                historial={tarea.HistorialMovimientos}
+                tiempos={tarea.TareaEstadoTiempos}
+                estadoActual={tarea.estado}
+              />
+            )}
+          </div>
+          {notificacionPendiente && (
+            <ModalNotificacion
+              visible={notificacionPendiente}
+              titulo={"Confirmar Entrega"}
+              descripcion={"¿Deseas confirmar que la tarea fue entregada?"}
+              onConfirm={(e) => confirmarEntrega(e)}
+              onCancel={() => setNotificacionPendiente(false)}
+            />
+          )}
+          {modalVisible && (
+            <ModalInformativo
+              modalInfo={modalInfo}
+              onClose={cerrarModal} // Pasar la función de cierre
+            />
+          )}
+          {loadingOpen && <Loading />}
+          <ModalConfirmacion
+            open={confirmarEliminar}
+            onClose={() => setConfirmarEliminar(false)} // Cierra el modal
+            onConfirm={eliminarTarea} // Llama a eliminarTarea al confirmar
+            mensaje="¿Estás seguro de que deseas eliminar esta tarea? Esta acción no se puede deshacer."
           />
-        )}
-      </div>
-      {notificacionPendiente && (
-        <ModalNotificacion
-          visible={notificacionPendiente}
-          titulo={"Confirmar Entrega"}
-          descripcion={"¿Deseas confirmar que la tarea fue entregada?"}
-          onConfirm={confirmarEntrega}
-          onCancel={() => setNotificacionPendiente(false)}
-        />
+        </div>
+      ) : (
+        <TareaAgente tarea={tarea} />
       )}
-      {modalVisible && (
-        <ModalInformativo
-          modalInfo={modalInfo}
-          onClose={cerrarModal} // Pasar la función de cierre
-        />
-      )}
-      {loadingOpen && <Loading />}
-      <ModalConfirmacion
-        open={confirmarEliminar}
-        onClose={() => setConfirmarEliminar(false)} // Cierra el modal
-        onConfirm={eliminarTarea} // Llama a eliminarTarea al confirmar
-        mensaje="¿Estás seguro de que deseas eliminar esta tarea? Esta acción no se puede deshacer."
-      />
-    </div>
+    </>
   );
 }

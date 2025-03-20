@@ -231,22 +231,11 @@ export const TareaAgente = () => {
   };
 
   const confirmarEntrega = async () => {
-    const estado = { estado: "Revisión" };
     const notificacion = {
       idNotificacion: tarea.Notificacions[0].id,
       estado: "Aceptada",
     };
     try {
-      const { data } = await axios.put(
-        `${config.apiUrl}/tareas/${id}/cambiarEstado`,
-        estado,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
       const resp = await axios.put(
         `${config.apiUrl}/tareas/${id}/confirmarNotificacion`,
         notificacion,
@@ -257,8 +246,8 @@ export const TareaAgente = () => {
         }
       );
       const historial = {
-        tipo: "Revisión",
-        descripcion: "La tarea se encuentra en proceso de revisión",
+        tipo: "Cambio de plazo",
+        descripcion: "El agente aceptó el cambio de plazo",
       };
       const resp2 = await axios.post(
         `${config.apiUrl}/tareas/${id}/historial`,
