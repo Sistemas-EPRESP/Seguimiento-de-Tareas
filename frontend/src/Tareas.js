@@ -48,3 +48,5 @@ export const Tareas = [
     estado: "Sin comenzar", // Puede ser "Sin comenzar", "En curso", "Bloqueado", "Completado", "En revisión"
   },
 ];
+
+// for testing purposes
