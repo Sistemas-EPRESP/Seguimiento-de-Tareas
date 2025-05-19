@@ -2,18 +2,19 @@
 
 ## Índice
 
-- [Ruta 1](#ruta-1)
+- [Agentes](#agentes)
 - [Ruta 2](#ruta-2)
 - ...
 
+## Agentes
+
 ---
 
-## Ruta: `api/agentes`
+### `GET api/agentes`
 
-- **Método:** `GET`
-- **Descripción:** _Obtener todos los agentes._
+_Obtener todos los agentes._
 
-### Respuesta
+#### Respuesta
 
 ```json
 [
@@ -29,18 +30,11 @@
 
 ---
 
-## Ruta: `api/agentes/:id`
+### `GET api/agentes/:id`
 
-- **Método:** `GET`
-- **Descripción:** _Obtener información de un agente._
+_Obtener información de un agente._
 
-### Parámetros de URL
-
-| Nombre | Tipo   | Requerido | Descripción               |
-| ------ | ------ | --------- | ------------------------- |
-| id     | número | Sí        | Identificador del agente. |
-
-### Respuesta
+#### Respuesta
 
 ```json
 {
@@ -57,12 +51,11 @@
 
 ---
 
-## Ruta: `api/agentes`
+### `POST api/agentes`
 
-- **Método**: POST
-- **Descripción**: _Crear un agente_
+_Crear un agente_
 
-## Body
+#### Body
 
 ```json
 {
@@ -73,7 +66,7 @@
 }
 ```
 
-## Respuesta
+#### Respuesta
 
 ```json
 {
@@ -93,5 +86,43 @@
     "updatedAt": "2025-05-19T13:01:05.828Z",
     "createdAt": "2025-05-19T13:01:05.828Z"
   }
+}
+```
+
+### `PUT api/agentes/:id`
+
+_Modificar el nombre o apellido de un agente_
+
+#### Body
+
+```json
+{
+  "nombre": "Raúl",
+  "apellido": "Cozetti"
+}
+```
+
+#### Respuesta
+
+```json
+{
+  "nombre": "Raúl",
+  "apellido": "Cozetti",
+  "id": 4,
+  "createdAt": "2025-05-19T13:01:05.770Z",
+  "updatedAt": "2025-05-19T13:16:17.080Z"
+}
+```
+
+### `DELETE api/agentes/:id`
+
+_Eliminar un agente_
+Es necesario primero eliminar al usuario de la tabla Usuarios que referencia a este agente. No elimina en CASCADE.
+
+#### Respuesta
+
+```json
+{
+  "message": "Agente eliminado con éxito"
 }
 ```
