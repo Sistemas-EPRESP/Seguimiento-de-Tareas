@@ -1,3 +1,5 @@
+import PropTypes from "prop-types";
+
 export default function Container({ children, hasMenu }) {
   return (
     <div
@@ -9,3 +11,8 @@ export default function Container({ children, hasMenu }) {
     </div>
   );
 }
+
+Container.propTypes = {
+  children: PropTypes.node.isRequired,
+  hasMenu: PropTypes.bool,
+};

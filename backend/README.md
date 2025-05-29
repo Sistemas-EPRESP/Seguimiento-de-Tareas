@@ -89,6 +89,8 @@ _Crear un agente_
 }
 ```
 
+---
+
 ### `PUT api/agentes/:id`
 
 _Modificar el nombre o apellido de un agente_
@@ -114,6 +116,8 @@ _Modificar el nombre o apellido de un agente_
 }
 ```
 
+---
+
 ### `DELETE api/agentes/:id`
 
 _Eliminar un agente_
@@ -126,3 +130,66 @@ Es necesario primero eliminar al usuario de la tabla Usuarios que referencia a e
   "message": "Agente eliminado con éxito"
 }
 ```
+
+---
+
+## Auth
+
+---
+
+### GET api/verify-login
+
+_Recibe el JWT, decodifica el usuario (junto su id) del mismo, verifica que el usuario exista y lo devuelve._
+
+#### Headers
+
+```http
+    Authorization: Bearer <token>
+```
+
+#### Respuesta
+
+```json
+{
+  "id": 4,
+  "rol": "Personal",
+  "agente": {
+    "nombre": "Martín",
+    "apellido": "Mina"
+  }
+}
+```
+
+---
+
+### POST api/login
+
+_Inicia sesión del usuario_
+
+#### Body
+
+```json
+{
+  "nombre": "Martín",
+  "apellido": "Mina",
+  "password": "Contraseña1234"
+}
+```
+
+#### Respuesta
+
+```json
+{
+  "token": "Token JWT",
+  "rol": "Personal",
+  "agente": {
+    "id": 4,
+    "nombre": "Martín",
+    "apellido": "Mina"
+  }
+}
+```
+
+---
+
+## 
