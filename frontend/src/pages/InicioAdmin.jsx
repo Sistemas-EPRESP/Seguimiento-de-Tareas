@@ -1,65 +1,28 @@
-import { useEffect, useState, useCallback, useContext } from "react";
+import { useState, useCallback, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { isToday, isThisWeek, parseISO, isFuture, addDays } from "date-fns";
+//import { isToday, isThisWeek, parseISO, isFuture, addDays } from "date-fns";
 import TareaCard from "../components/TareaCard.jsx";
 import Filtro from "../layout/Filtro.jsx";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import axios from "axios";
-import config from "../api/config.js"; // Importa la configuración de la API
 import { AuthContext } from "../context/AuthContext";
 import useAgentes from "../hooks/useAgentes.js";
+import useTareas from "../hooks/useTareas.js";
+
+const ALL_UNFINISHED_TASKS = -1;
 
 export default function Inicio() {
   const navigate = useNavigate();
   const { usuario } = useContext(AuthContext);
-  const [tareas, setTareas] = useState([]);
-  const [todayTasks, setTodayTasks] = useState([]);
-  const [weekTasks, setWeekTasks] = useState([]);
-  const [futureTasks, setFutureTasks] = useState([]);
+  //const [todayTasks, setTodayTasks] = useState([]);
+  //const [weekTasks, setWeekTasks] = useState([]);
+  //const [futureTasks, setFutureTasks] = useState([]);
   const [prioridadFiltro, setPrioridadFiltro] = useState("");
   const [agenteFiltro, setAgenteFiltro] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("");
 
   const { agentes, loadingAgentes, errorAgentes } = useAgentes();
-
-  if (errorAgentes)
-    return (
-      <>
-        <h1>Se produjo un error</h1>
-        <p>{errorAgentes.message}</p>
-      </>
-    );
-
-  const obtenerTareas = async () => {
-    const token = localStorage.getItem("token");
-    const idAgente = -1; // Obtienes el ID del agente
-
-    if (!token) {
-      console.error("No hay token disponible");
-      return;
-    }
-    const today = new Date();
-    const oneWeekFromNow = new Date(today);
-    oneWeekFromNow.setDate(today.getDate() + 7);
-
-    try {
-      // Pasamos el ID como query string
-      const { data } = await axios.get(`${config.apiUrl}/tareas/incompletas`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        params: {
-          idAgente, // Esto será enviado como ?idAgente=valor
-        },
-      });
-      setTareas(data);
-    } catch (error) {
-      console.error(
-        "Error al obtener las tareas",
-        error.response?.data || error
-      );
-    }
-  };
+  const { tareas, loadingTareas, errorTareas } =
+    useTareas(ALL_UNFINISHED_TASKS);
 
   const filtrarTareas = useCallback(
     (tarea) => {
@@ -78,9 +41,21 @@ export default function Inicio() {
     [prioridadFiltro, agenteFiltro, estadoFiltro]
   );
 
-  useEffect(() => {
-    obtenerTareas();
-  }, []);
+  if (errorAgentes)
+    return (
+      <>
+        <h1>Se produjo un error en la carga de agentes</h1>
+        <p>{errorAgentes.message}</p>
+      </>
+    );
+
+  if (errorTareas)
+    return (
+      <>
+        <h1>Se produjo un error en la carga de tareas</h1>
+        <p>{errorAgentes.message}</p>
+      </>
+    );
 
   return (
     <div className="container mx-auto px-1">
@@ -130,7 +105,7 @@ export default function Inicio() {
       </div>
       <h1 className="text-3xl mb-6">Tareas activas</h1>
       <ul className="mb-8">
-        {tareas.length > 0 ? (
+        {!loadingTareas && tareas.length > 0 ? (
           tareas
             .filter(filtrarTareas)
             .map((tarea) => <TareaCard key={tarea.id} tarea={tarea} />)

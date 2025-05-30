@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import config from "../api/config";
 import axios from "axios";
 
@@ -50,7 +50,11 @@ const useApiGet = (url, params = {}) => {
       setLoading(false);
     }
   };
-  get();
+
+  useEffect(() => {
+    get();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return { result, loading, error };
 };
