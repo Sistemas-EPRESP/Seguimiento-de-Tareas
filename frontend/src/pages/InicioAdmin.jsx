@@ -7,12 +7,12 @@ import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import axios from "axios";
 import config from "../api/config.js"; // Importa la configuración de la API
 import { AuthContext } from "../context/AuthContext";
+import useApiGet from "../hooks/useApiGet.js";
 
 export default function Inicio() {
   const navigate = useNavigate();
   const { usuario } = useContext(AuthContext);
   const [tareas, setTareas] = useState([]);
-  const [agentes, setAgentes] = useState([]); // Ahora usamos este state para el filtro de agentes
   const [todayTasks, setTodayTasks] = useState([]);
   const [weekTasks, setWeekTasks] = useState([]);
   const [futureTasks, setFutureTasks] = useState([]);
@@ -20,24 +20,8 @@ export default function Inicio() {
   const [agenteFiltro, setAgenteFiltro] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("");
 
-  const obtenerAgentes = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.error("No hay token disponible");
-      return;
-    }
-
-    try {
-      const { data } = await axios.get(`${config.apiUrl}/agentes`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setAgentes(data); // Guardamos los agentes en el state
-    } catch (error) {
-      console.error("Error al obtener los agentes", error);
-    }
-  };
+  const { result, loading, error } = useApiGet(`/agentes`);
+  const agentes = result;
 
   const obtenerTareas = async () => {
     const token = localStorage.getItem("token");
@@ -89,7 +73,6 @@ export default function Inicio() {
 
   useEffect(() => {
     obtenerTareas();
-    obtenerAgentes(); // Llamamos a la función para obtener los agentes
   }, []);
 
   return (
@@ -108,11 +91,17 @@ export default function Inicio() {
             selectClassName="w-full px-3 py-2 bg-gray-800 text-white rounded-lg focus:outline-none"
           />
           <Filtro
-            opciones={[
-              ...new Set(
-                agentes.map((agente) => `${agente.nombre} ${agente.apellido}`) // Retorna solo la cadena de nombre completo
-              ),
-            ]}
+            opciones={
+              loading
+                ? []
+                : [
+                    ...new Set(
+                      agentes.map(
+                        (agente) => `${agente.nombre} ${agente.apellido}`
+                      ) // Retorna solo la cadena de nombre completo
+                    ),
+                  ]
+            }
             onChange={(value) => setAgenteFiltro(value)}
             placeHolder={"Agentes"}
             selectClassName="w-full px-3 py-2 bg-gray-800 text-gray-100 rounded-lg focus:outline-none"
