@@ -7,7 +7,7 @@ import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import axios from "axios";
 import config from "../api/config.js"; // Importa la configuración de la API
 import { AuthContext } from "../context/AuthContext";
-import useApiGet from "../hooks/useApiGet.js";
+import useAgentes from "../hooks/useAgentes.js";
 
 export default function Inicio() {
   const navigate = useNavigate();
@@ -20,8 +20,15 @@ export default function Inicio() {
   const [agenteFiltro, setAgenteFiltro] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("");
 
-  const { result, loading, error } = useApiGet(`/agentes`);
-  const agentes = result;
+  const { agentes, loadingAgentes, errorAgentes } = useAgentes();
+
+  if (errorAgentes)
+    return (
+      <>
+        <h1>Se produjo un error</h1>
+        <p>{errorAgentes.message}</p>
+      </>
+    );
 
   const obtenerTareas = async () => {
     const token = localStorage.getItem("token");
@@ -92,7 +99,7 @@ export default function Inicio() {
           />
           <Filtro
             opciones={
-              loading
+              loadingAgentes
                 ? []
                 : [
                     ...new Set(
