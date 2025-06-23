@@ -1,15 +1,16 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
-const TareaEstadoTiempo = sequelize.define('TareaEstadoTiempo', {
+const TareaEstadoTiempo = sequelize.define("TareaEstadoTiempo", {
   estado: {
     type: DataTypes.ENUM(
-      'Sin comenzar',
-      'Curso',
-      'Revisión',
-      'Confirmación de revisión',
-      'Corrección',
-      'Bloqueada'
+      "Sin comenzar",
+      "Curso",
+      "Revisión",
+      "Confirmación de revisión",
+      "Corrección",
+      "Bloqueada",
+      "Finalizado"
     ),
     allowNull: false,
   },
@@ -24,12 +25,11 @@ const TareaEstadoTiempo = sequelize.define('TareaEstadoTiempo', {
   tareaId: {
     type: DataTypes.INTEGER,
     references: {
-      model: 'Tareas',
-      key: 'id',
+      model: "Tareas",
+      key: "id",
     },
     allowNull: false,
   },
 });
 
 module.exports = TareaEstadoTiempo;
-

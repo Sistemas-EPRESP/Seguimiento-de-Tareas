@@ -4,7 +4,7 @@ import Inicio from "../pages/Inicio";
 import InicioAdmin from "../pages/InicioAdmin"; // Nueva página para administradores
 import Buscar from "../pages/Buscar";
 import CrearTarea from "../pages/CrearTarea";
-import TareaDetalles from "../pages/TareaDetalles";
+import TareaDetalles from "../pages/TareaDetalles/TareaDetalles";
 import Login from "../pages/Login";
 import { AuthContext } from "../context/AuthContext";
 import PrivateRoute from "../context/PrivateRoute";
