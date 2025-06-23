@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import Modal from "../layout/Modal";
-import Select from "./Select";
+import Modal from "../../layout/Modal";
+import Select from "../../components/Select";
 import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
-import config from "../api/config";
-import ModalInformativo from "../layout/ModalInformativo";
-import Loading from "../layout/Loading";
+import config from "../../api/config";
+import ModalInformativo from "../../layout/ModalInformativo";
+import Loading from "../../layout/Loading";
 
 export default function CrearRevision({
   tareaId,

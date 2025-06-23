@@ -8,9 +8,9 @@ import { format } from "date-fns";
 import { useState } from "react";
 import { es } from "date-fns/locale";
 import axios from "axios";
-import config from "../api/config";
+import config from "../../api/config";
 import CrearRevision from "./CrearRevision";
-import ModalConfirmacion from "../layout/ModalConfirmacion";
+import ModalConfirmacion from "../../layout/ModalConfirmacion";
 
 export default function Revisiones({ tareaId, revisiones, onActualizar }) {
   const [modalOpen, setModalOpen] = useState(false);

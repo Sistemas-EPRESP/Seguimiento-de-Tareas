@@ -3,12 +3,11 @@ import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import config from "../../api/config";
 import "react-datepicker/dist/react-datepicker.css";
-import Revisiones from "../../components/Revisiones";
-import AgenteSeleccionado from "../../components/AgenteSeleccionado";
+import Revisiones from "./Revisiones";
 import ModalInformativo from "../../layout/ModalInformativo";
 import Loading from "../../layout/Loading";
 import ModalNotificacion from "../../layout/ModalNotificacion";
-import TareaHistorial from "../../components/TareaHistorial";
+import TareaHistorial from "./TareaHistorial";
 
 import ModalConfirmacion from "../../layout/ModalConfirmacion";
 import { AuthContext } from "../../context/AuthContext";
