@@ -2,7 +2,6 @@ import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import EditIcon from "@mui/icons-material/Edit"; // Icono de actualizar
 import DeleteIcon from "@mui/icons-material/Delete"; // Icono de eliminar
 import { format } from "date-fns";
 import { useState } from "react";
@@ -11,6 +10,7 @@ import axios from "axios";
 import config from "../../api/config";
 import CrearRevision from "./CrearRevision";
 import ModalConfirmacion from "../../layout/ModalConfirmacion";
+import PropTypes from "prop-types";
 
 export default function Revisiones({ tareaId, revisiones, onActualizar }) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -169,3 +169,9 @@ export default function Revisiones({ tareaId, revisiones, onActualizar }) {
     </div>
   );
 }
+
+Revisiones.propTypes = {
+  tareaId: PropTypes.number,
+  revisiones: PropTypes.array,
+  onActualizar: PropTypes.func,
+};

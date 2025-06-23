@@ -7,6 +7,7 @@ import axios from "axios";
 import config from "../../api/config";
 import ModalInformativo from "../../layout/ModalInformativo";
 import Loading from "../../layout/Loading";
+import PropTypes from "prop-types";
 
 export default function CrearRevision({
   tareaId,
@@ -66,30 +67,21 @@ export default function CrearRevision({
         }
       );
       const estado = { estado: "Corrección" };
-      const { data } = await axios.put(
-        `${config.apiUrl}/tareas/${id}/cambiarEstado`,
-        estado,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axios.put(`${config.apiUrl}/tareas/${id}/cambiarEstado`, estado, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const historial = {
         tipo: "Corrección",
         descripcion:
           "La tarea ha sido corregida y entregada al agente para su revisión",
       };
-      const resp = await axios.post(
-        `${config.apiUrl}/tareas/${id}/historial`,
-        historial,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      var notificacion = {};
+      await axios.post(`${config.apiUrl}/tareas/${id}/historial`, historial, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       onRevisionCreada(response.data);
       onActualizar();
@@ -99,6 +91,7 @@ export default function CrearRevision({
         mensaje: "¡Revisión creada con éxito!",
       });
     } catch (error) {
+      console.error(error);
       setModalInfo({
         tipo: "Error",
         titulo: "Error al crear",
@@ -182,3 +175,10 @@ export default function CrearRevision({
     </Modal>
   );
 }
+
+CrearRevision.propTypes = {
+  tareaId: PropTypes.number,
+  onClose: PropTypes.func,
+  onRevisionCreada: PropTypes.func,
+  onActualizar: PropTypes.func,
+};
