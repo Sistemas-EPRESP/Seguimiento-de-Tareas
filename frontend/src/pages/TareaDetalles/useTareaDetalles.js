@@ -1,1 +1,223 @@
-export default function useTareaDetalles() {}
+import axios from "axios";
+import config from "../../api/config";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+export default function useTareaDetalles({
+  tarea,
+  todosAgentes,
+  getValues,
+  setValue,
+  setLoadingOpen,
+  setActualizarTarea,
+  setModalInfo,
+  setModalVisible,
+  setConfirmarEliminar,
+}) {
+  const [tareaEliminada, setTareaEliminada] = useState(false);
+  const token = localStorage.getItem("token");
+  const navigate = useNavigate();
+  const handleAgregarAgente = (e) => {
+    const idSeleccionado = parseInt(e.target.value);
+    if (!idSeleccionado) return;
+
+    const agente = todosAgentes.find((a) => a.id === idSeleccionado);
+    if (!agente) return;
+
+    const actuales = getValues("agentesSeleccionados");
+    const yaEsta = actuales.some((a) => a.id === agente.id);
+
+    if (yaEsta) return;
+
+    setValue("agentesSeleccionados", [...actuales, agente]);
+  };
+
+  const handleEliminarAgente = (id) => {
+    const actuales = getValues("agentesSeleccionados");
+    const filtrados = actuales.filter((a) => a.id !== id);
+    setValue("agentesSeleccionados", filtrados);
+  };
+
+  const submitTarea = async (values) => {
+    setLoadingOpen(true);
+    const token = localStorage.getItem("token");
+    let notificacion = {};
+    let historial = {};
+    if (tarea.fecha_de_entrega !== values.fecha_de_entrega) {
+      notificacion = {
+        titulo: "Cambio de plazo",
+        mensaje: `El plazo de entrega de la tarea a sido cambiado para el día ${format(
+          values.fecha_de_entrega,
+          "dd/MM/yyyy"
+        )}`,
+      };
+      await axios.post(
+        `${config.apiUrl}/tareas/${tarea.id}/notificar`,
+        notificacion,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      historial = {
+        tipo: "Cambio de plazo",
+        descripcion: `El plazo de entrega de la tarea a sido cambiado para el ${format(
+          values.fecha_de_entrega,
+          "EEEE d 'de' MMMM",
+          { locale: es }
+        )}`,
+      };
+      await axios.post(
+        `${config.apiUrl}/tareas/${tarea.id}/historial`,
+        historial,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const formattedData = {
+        ...values,
+        agentesIds: values.agentesSeleccionados.map((agente) => agente.id),
+      };
+
+      try {
+        await axios.put(`${config.apiUrl}/tareas/${tarea.id}`, formattedData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (tarea.estado !== values.estado) {
+          const estado = { estado: values.estado };
+          historial = {
+            tipo: values.estado,
+            descripcion: `El estado de la tarea ha sido cambiado a ${values.estado}`,
+          };
+          await axios.post(
+            `${config.apiUrl}/tareas/${tarea.id}/historial`,
+            historial,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          await axios.put(
+            `${config.apiUrl}/tareas/${tarea.id}/cambiarEstado`,
+            estado,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+        }
+        setActualizarTarea((prev) => !prev);
+        setModalInfo({
+          tipo: "Exito",
+          titulo: "Tarea Actualizada!",
+          mensaje: "¡Tarea actualizada con éxito!",
+        });
+      } catch (error) {
+        setModalInfo({
+          tipo: "Error",
+          titulo: "Error al crear la tarea",
+          mensaje:
+            error.response.data.error ||
+            "Ocurrió un error al crear la tarea. Intente nuevamente.",
+        });
+      } finally {
+        setLoadingOpen(false);
+        setModalVisible(true);
+      }
+    }
+  };
+
+  const finalizarTarea = async (e) => {
+    e.preventDefault();
+    setLoadingOpen(true);
+    const estado = { estado: "Finalizado" };
+    try {
+      await axios.put(
+        `${config.apiUrl}/tareas/${tarea.id}/cambiarEstado`,
+        estado,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const historial = {
+        tipo: "Finalización",
+        descripcion: "La tarea ha sido finalizada",
+      };
+      await axios.post(
+        `${config.apiUrl}/tareas/${tarea.id}/historial`,
+        historial,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setActualizarTarea((prev) => !prev);
+      setModalInfo({
+        tipo: "Exito",
+        titulo: "Operación exitosa",
+        mensaje: "La tarea ha sido finalizada",
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingOpen(false);
+      setModalVisible(true);
+    }
+  };
+
+  const eliminarTarea = async () => {
+    setConfirmarEliminar(false);
+    setLoadingOpen(true);
+    try {
+      await axios.delete(`${config.apiUrl}/tareas/${tarea.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setModalInfo({
+        tipo: "Exito",
+        titulo: "Tarea Eliminada!",
+        mensaje: "¡Tarea eliminada con éxito!",
+      });
+      // eslint-disable-next-line no-unused-vars
+    } catch (error) {
+      setModalInfo({
+        tipo: "Error",
+        titulo: "Error al eliminar",
+        mensaje: "Ocurrió un error inesperado al eliminar la tarea",
+      });
+    } finally {
+      setLoadingOpen(false);
+      setModalVisible(true);
+      setTareaEliminada(true);
+    }
+  };
+
+  const cerrarModal = () => {
+    setModalVisible(false);
+    if (tareaEliminada) {
+      navigate("/"); // Redirigir al inicio si la tarea fue eliminada
+    }
+  };
+
+  return {
+    handleEliminarAgente,
+    submitTarea,
+    finalizarTarea,
+    eliminarTarea,
+    cerrarModal,
+    handleAgregarAgente,
+  };
+}
