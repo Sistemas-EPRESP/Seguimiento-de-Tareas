@@ -68,6 +68,7 @@ export default function TareaDetalles() {
         titulo: "Tarea Eliminada!",
         mensaje: "¡Tarea eliminada con éxito!",
       });
+      setTareaEliminada(true);
     } catch (error) {
       console.error(error);
       setModalInfo({
@@ -78,7 +79,6 @@ export default function TareaDetalles() {
     } finally {
       setLoadingOpen(false);
       setModalVisible(true);
-      setTareaEliminada(true);
     }
   };
 

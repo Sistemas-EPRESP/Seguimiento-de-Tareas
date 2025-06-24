@@ -13,7 +13,7 @@ import Loading from "../../layout/Loading";
 
 import config from "../../api/config";
 import PropTypes from "prop-types";
-import useTareaDetalles from "./useTareaDetalles";
+import useFormModificarTarea from "./useFormModificarTarea";
 export default function FormModificarTarea({ tarea }) {
   const {
     register,
@@ -58,7 +58,7 @@ export default function FormModificarTarea({ tarea }) {
     eliminarTarea,
     cerrarModal,
     handleAgregarAgente,
-  } = useTareaDetalles({
+  } = useFormModificarTarea({
     tarea,
     todosAgentes,
     getValues,

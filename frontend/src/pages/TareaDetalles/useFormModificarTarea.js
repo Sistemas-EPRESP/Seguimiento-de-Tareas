@@ -1,10 +1,9 @@
-import axios from "axios";
-import config from "../../api/config";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-export default function useTareaDetalles({
+import { api } from "../../api/api";
+export default function useFormModificarTarea({
   tarea,
   todosAgentes,
   getValues,
@@ -16,7 +15,6 @@ export default function useTareaDetalles({
   setConfirmarEliminar,
 }) {
   const [tareaEliminada, setTareaEliminada] = useState(false);
-  const token = localStorage.getItem("token");
   const navigate = useNavigate();
   const handleAgregarAgente = (e) => {
     const idSeleccionado = parseInt(e.target.value);
@@ -41,7 +39,6 @@ export default function useTareaDetalles({
 
   const submitTarea = async (values) => {
     setLoadingOpen(true);
-    const token = localStorage.getItem("token");
     let notificacion = {};
     let historial = {};
     if (tarea.fecha_de_entrega !== values.fecha_de_entrega) {
@@ -52,15 +49,7 @@ export default function useTareaDetalles({
           "dd/MM/yyyy"
         )}`,
       };
-      await axios.post(
-        `${config.apiUrl}/tareas/${tarea.id}/notificar`,
-        notificacion,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await api.post(`tareas/${tarea.id}/notificar`, notificacion);
       historial = {
         tipo: "Cambio de plazo",
         descripcion: `El plazo de entrega de la tarea a sido cambiado para el ${format(
@@ -69,15 +58,7 @@ export default function useTareaDetalles({
           { locale: es }
         )}`,
       };
-      await axios.post(
-        `${config.apiUrl}/tareas/${tarea.id}/historial`,
-        historial,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await api.post(`tareas/${tarea.id}/historial`, historial);
 
       const formattedData = {
         ...values,
@@ -85,35 +66,15 @@ export default function useTareaDetalles({
       };
 
       try {
-        await axios.put(`${config.apiUrl}/tareas/${tarea.id}`, formattedData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        await api.put(`tareas/${tarea.id}`, formattedData);
         if (tarea.estado !== values.estado) {
           const estado = { estado: values.estado };
           historial = {
             tipo: values.estado,
             descripcion: `El estado de la tarea ha sido cambiado a ${values.estado}`,
           };
-          await axios.post(
-            `${config.apiUrl}/tareas/${tarea.id}/historial`,
-            historial,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-          await axios.put(
-            `${config.apiUrl}/tareas/${tarea.id}/cambiarEstado`,
-            estado,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+          await api.post(`tareas/${tarea.id}/historial`, historial);
+          await api.put(`tareas/${tarea.id}/cambiarEstado`, estado);
         }
         setActualizarTarea((prev) => !prev);
         setModalInfo({
@@ -141,28 +102,13 @@ export default function useTareaDetalles({
     setLoadingOpen(true);
     const estado = { estado: "Finalizado" };
     try {
-      await axios.put(
-        `${config.apiUrl}/tareas/${tarea.id}/cambiarEstado`,
-        estado,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await api.put(`tareas/${tarea.id}/cambiarEstado`, estado);
       const historial = {
         tipo: "Finalización",
         descripcion: "La tarea ha sido finalizada",
       };
-      await axios.post(
-        `${config.apiUrl}/tareas/${tarea.id}/historial`,
-        historial,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await api.post(`tareas/${tarea.id}/historial`, historial);
+
       setActualizarTarea((prev) => !prev);
       setModalInfo({
         tipo: "Exito",
@@ -181,11 +127,7 @@ export default function useTareaDetalles({
     setConfirmarEliminar(false);
     setLoadingOpen(true);
     try {
-      await axios.delete(`${config.apiUrl}/tareas/${tarea.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await api.delete(`tareas/${tarea.id}`);
       setModalInfo({
         tipo: "Exito",
         titulo: "Tarea Eliminada!",
