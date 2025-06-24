@@ -171,7 +171,7 @@ export default function Revisiones({ tareaId, revisiones, onActualizar }) {
 }
 
 Revisiones.propTypes = {
-  tareaId: PropTypes.number,
+  tareaId: PropTypes.string,
   revisiones: PropTypes.array,
   onActualizar: PropTypes.func,
 };
