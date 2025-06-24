@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
-import axios from "axios";
 import DatePicker from "react-datepicker";
 import { es } from "date-fns/locale";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -11,9 +10,9 @@ import ModalInformativo from "../../layout/ModalInformativo";
 import ModalConfirmacion from "../../layout/ModalConfirmacion";
 import Loading from "../../layout/Loading";
 
-import config from "../../api/config";
 import PropTypes from "prop-types";
 import useFormModificarTarea from "./useFormModificarTarea";
+import { api } from "../../api/api";
 export default function FormModificarTarea({ tarea }) {
   const {
     register,
@@ -37,7 +36,6 @@ export default function FormModificarTarea({ tarea }) {
     },
     resolver: yupResolver(tareaSchema),
   });
-  const token = localStorage.getItem("token");
 
   const [actualizarTarea, setActualizarTarea] = useState(false);
   const [todosAgentes, setTodosAgentes] = useState([]);
@@ -73,18 +71,14 @@ export default function FormModificarTarea({ tarea }) {
   useEffect(() => {
     const obtenerAgentes = async () => {
       try {
-        const { data } = await axios.get(`${config.apiUrl}/agentes`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const { data } = await api.get(`agentes`);
         setTodosAgentes(data);
       } catch (error) {
         console.error("Error al obtener los agentes", error);
       }
     };
     obtenerAgentes();
-  }, [tarea.id, token, actualizarTarea]);
+  }, [tarea.id, actualizarTarea]);
 
   return (
     <div
