@@ -1,13 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState, useContext } from "react";
-import axios from "axios";
-import config from "../../api/config";
 import "react-datepicker/dist/react-datepicker.css";
 import Revisiones from "./Revisiones";
 import ModalInformativo from "../../layout/ModalInformativo";
 import Loading from "../../layout/Loading";
 import ModalNotificacion from "../../layout/ModalNotificacion";
 import TareaHistorial from "./TareaHistorial";
+import { api } from "../../api/api";
 
 import ModalConfirmacion from "../../layout/ModalConfirmacion";
 import { AuthContext } from "../../context/AuthContext";
@@ -33,18 +32,13 @@ export default function TareaDetalles() {
   const [tarea, setTarea] = useState(null);
   const [tareaEliminada, setTareaEliminada] = useState(false);
   const [cargando, setCargando] = useState(false);
-  const token = localStorage.getItem("token");
   const [confirmarEliminar, setConfirmarEliminar] = useState(false);
   const [modoVista, setModoVista] = useState("Administrador");
 
   useEffect(() => {
     const obtenerTarea = async () => {
       try {
-        const { data } = await axios.get(`${config.apiUrl}/tareas/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const { data } = await api.get(`tareas/${id}`);
 
         const notificacionPendiente = data.Notificacions?.find(
           (n) =>
@@ -62,23 +56,20 @@ export default function TareaDetalles() {
     };
 
     obtenerTarea();
-  }, [id, token, actualizarTarea]);
+  }, [id, actualizarTarea]);
 
   const eliminarTarea = async () => {
     setConfirmarEliminar(false);
     setLoadingOpen(true);
     try {
-      await axios.delete(`${config.apiUrl}/tareas/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await api.delete(`tareas/${id}`);
       setModalInfo({
         tipo: "Exito",
         titulo: "Tarea Eliminada!",
         mensaje: "¡Tarea eliminada con éxito!",
       });
     } catch (error) {
+      console.error(error);
       setModalInfo({
         tipo: "Error",
         titulo: "Error al eliminar",
@@ -106,38 +97,14 @@ export default function TareaDetalles() {
       estado: "Aceptada",
     };
     try {
-      const { data } = await axios.put(
-        `${config.apiUrl}/tareas/${id}/cambiarEstado`,
-        estado,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await api.put(`tareas/${id}/cambiarEstado`, estado);
 
-      const resp = await axios.put(
-        `${config.apiUrl}/tareas/${id}/confirmarNotificacion`,
-        notificacion,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await api.put(`tareas/${id}/confirmarNotificacion`, notificacion);
       const historial = {
         tipo: "Revisión",
         descripcion: "La tarea se encuentra en proceso de revisión",
       };
-      const resp2 = await axios.post(
-        `${config.apiUrl}/tareas/${id}/historial`,
-        historial,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await api.post(`tareas/${id}/historial`, historial);
       setActualizarTarea((prev) => !prev);
       setModalInfo({
         tipo: "Exito",
