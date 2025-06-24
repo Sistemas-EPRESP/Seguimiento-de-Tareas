@@ -4,7 +4,7 @@ import axios from "axios";
 import config from "../api/config";
 import Loading from "../layout/Loading";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import { format, set } from "date-fns";
+import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";

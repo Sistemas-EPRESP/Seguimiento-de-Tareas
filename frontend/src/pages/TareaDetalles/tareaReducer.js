@@ -1,4 +1,5 @@
 export const initialState = {
+  tarea: null,
   notificacionPendiente: false,
   actualizarTarea: false,
   modalInfo: {
@@ -8,19 +9,38 @@ export const initialState = {
   },
   modalVisible: false,
   loadingOpen: false,
-  tarea: null,
   tareaEliminada: false,
   cargando: false,
   confirmarEliminar: false,
   modoVista: "Administrador",
 };
 
-export default async function tareaReducer(state, action) {
+export function tareaReducer(state, action) {
   switch (action.type) {
+    case "ACTUALIZAR_TAREA": {
+      return {
+        ...state,
+        actualizarTarea: !state.actualizarTarea,
+      };
+    }
+    case "NOTIFICACION_PENDIENTE": {
+      return {
+        ...state,
+        notificacionPendiente: action.notificacionPendiente,
+      };
+    }
+    case "TAREA": {
+      return {
+        ...state,
+        tarea: action.tarea,
+      };
+    }
+
     case "ELIMINAR_TAREA": {
       return {
         ...state,
         loadingOpen: true,
+        confirmarEliminar: false,
       };
     }
     case "ELIMINACION_EXITOSA": {
@@ -48,12 +68,69 @@ export default async function tareaReducer(state, action) {
         modalVisible: true,
       };
     }
+    case "ENTREGA_EXITOSA": {
+      return {
+        ...state,
+        modalInfo: {
+          tipo: "Exito",
+          titulo: "Operación exitosa",
+          mensaje: "Se confirmó la entrega de la tarea!",
+        },
+        notificacionPendiente: false,
+        cargando: false,
+        modalVisible: true,
+      };
+    }
+
+    case "ERROR_ENTREGA": {
+      return {
+        ...state,
+        modalInfo: {
+          tipo: "Error",
+          titulo: "Error de servidor",
+          mensaje: "No se pudo completar esta acción!",
+        },
+        notificacionPendiente: false,
+        cargando: false,
+        modalVisible: true,
+      };
+    }
+
+    case "SWITCH_MODO": {
+      return {
+        ...state,
+        modoVista:
+          state.modoVista === "Administrador" ? "Agente" : "Administrador",
+      };
+    }
+
+    case "ABRIR_MODAL": {
+      return {
+        ...state,
+        modalVisible: true,
+      };
+    }
     case "CERRAR_MODAL": {
       return {
         ...state,
         modalVisible: false,
       };
     }
+
+    case "CORTAR_NOTIFICACION_PENDIENTE": {
+      return {
+        ...state,
+        notificacionPendiente: false,
+      };
+    }
+
+    case "CANCELAR_ELIMINACION": {
+      return {
+        ...state,
+        confirmarEliminar: false,
+      };
+    }
+
     default:
       throw new Error(
         "No se encontro el evento en tareaReducer: ",

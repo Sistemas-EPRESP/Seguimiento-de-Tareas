@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useContext, useReducer } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import Revisiones from "./Revisiones";
 import ModalInformativo from "../../layout/ModalInformativo";
@@ -14,26 +14,14 @@ import { TareaAgente } from "../TareaAgente";
 import SwitchModoUsuarioBtn from "./SwitchModoUsuarioBtn";
 import FormModificarTarea from "./FormModificarTarea";
 
+import { tareaReducer, initialState } from "./tareaReducer";
+
 export default function TareaDetalles() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { usuario } = useContext(AuthContext);
-  const [notificacionPendiente, setNotificacionPendiente] = useState(false);
-  const [actualizarTarea, setActualizarTarea] = useState(false);
 
-  const [modalInfo, setModalInfo] = useState({
-    tipo: "",
-    visible: false,
-    titulo: "",
-    mensaje: "",
-  });
-  const [modalVisible, setModalVisible] = useState(false); // Controla la visibilidad del modal
-  const [loadingOpen, setLoadingOpen] = useState(false);
-  const [tarea, setTarea] = useState(null);
-  const [tareaEliminada, setTareaEliminada] = useState(false);
-  const [cargando, setCargando] = useState(false);
-  const [confirmarEliminar, setConfirmarEliminar] = useState(false);
-  const [modoVista, setModoVista] = useState("Administrador");
+  const [state, dispatch] = useReducer(tareaReducer, initialState);
 
   useEffect(() => {
     const obtenerTarea = async () => {
@@ -47,44 +35,32 @@ export default function TareaDetalles() {
               n.titulo === "Finalizacion de tarea")
         );
         if (notificacionPendiente) {
-          setNotificacionPendiente(notificacionPendiente);
+          dispatch({ type: "NOTIFICACION_PENDIENTE", notificacionPendiente });
         }
-        setTarea(data);
+        dispatch({ type: "TAREA", tarea: data });
       } catch (error) {
         console.error("Error al obtener los detalles de la tarea", error);
       }
     };
 
     obtenerTarea();
-  }, [id, actualizarTarea]);
+  }, [id, state.actualizarTarea]);
 
   const eliminarTarea = async () => {
-    setConfirmarEliminar(false);
-    setLoadingOpen(true);
+    dispatch({ type: "ELIMINAR_TAREA" });
+
     try {
       await api.delete(`tareas/${id}`);
-      setModalInfo({
-        tipo: "Exito",
-        titulo: "Tarea Eliminada!",
-        mensaje: "¡Tarea eliminada con éxito!",
-      });
-      setTareaEliminada(true);
+      dispatch({ type: "ELIMINACION_EXITOSA" });
     } catch (error) {
       console.error(error);
-      setModalInfo({
-        tipo: "Error",
-        titulo: "Error al eliminar",
-        mensaje: "Ocurrió un error inesperado al eliminar la tarea",
-      });
-    } finally {
-      setLoadingOpen(false);
-      setModalVisible(true);
+      dispatch({ type: "ERROR_ELIMINACION" });
     }
   };
 
   const cerrarModal = () => {
-    setModalVisible(false);
-    if (tareaEliminada) {
+    dispatch({ type: "CERRAR_MODAL" });
+    if (state.tareaEliminada) {
       navigate("/"); // Redirigir al inicio si la tarea fue eliminada
     }
   };
@@ -93,7 +69,7 @@ export default function TareaDetalles() {
     e.preventDefault();
     const estado = { estado: "Revisión" };
     const notificacion = {
-      idNotificacion: tarea.Notificacions[0].id,
+      idNotificacion: state.tarea.Notificacions[0].id,
       estado: "Aceptada",
     };
     try {
@@ -105,23 +81,11 @@ export default function TareaDetalles() {
         descripcion: "La tarea se encuentra en proceso de revisión",
       };
       await api.post(`tareas/${id}/historial`, historial);
-      setActualizarTarea((prev) => !prev);
-      setModalInfo({
-        tipo: "Exito",
-        titulo: "Operación exitosa",
-        mensaje: "Se confirmó la entrega de la tarea!",
-      });
+      dispatch({ type: "ENTREGA_EXITOSA" });
+      dispatch({ type: "ACTUALIZAR_TAREA" });
     } catch (error) {
       console.error(error);
-      setModalInfo({
-        tipo: "Error",
-        titulo: "Error de servidor",
-        mensaje: "No se pudo completar esta acción!",
-      });
-    } finally {
-      setNotificacionPendiente(false);
-      setCargando(false);
-      setModalVisible(true);
+      dispatch({ type: "ERROR_ENTREGA" });
     }
   };
 
@@ -129,62 +93,63 @@ export default function TareaDetalles() {
     <>
       {usuario?.rol === "Administrador" && (
         <SwitchModoUsuarioBtn
-          setModoVista={setModoVista}
-          setActualizarTarea={setActualizarTarea}
+          dispatch={dispatch}
           modoACambiar={
-            modoVista === "Administrador" ? "Agente" : "Administrador"
+            state.modoVista === "Administrador" ? "Agente" : "Administrador"
           }
         />
       )}
 
-      {modoVista === "Administrador" ? (
+      {state.modoVista === "Administrador" ? (
         <div className="flex flex-col mt-10 gap-3 md:grid md:grid-cols-8 md:auto-rows-min md:gap-5 md:mt-0">
-          {tarea && <FormModificarTarea tarea={tarea} />}
+          {state.tarea && <FormModificarTarea tarea={state.tarea} />}
 
           <div className="col-span-3">
-            {tarea && (
+            {state.tarea && (
               <Revisiones
                 tareaId={id}
-                tarea={tarea}
-                revisiones={tarea.Revisions}
-                onActualizar={() => setActualizarTarea((prev) => !prev)}
+                tarea={state.tarea}
+                revisiones={state.tarea.Revisions}
+                onActualizar={() => dispatch({ type: "ACTUALIZAR_TAREA" })}
               />
             )}
           </div>
           <div className="col-span-8">
-            {tarea && (
+            {state.tarea && (
               <TareaHistorial
-                historial={tarea.HistorialMovimientos}
-                tiempos={tarea.TareaEstadoTiempos}
-                estadoActual={tarea.estado}
+                historial={state.tarea.HistorialMovimientos}
+                tiempos={state.tarea.TareaEstadoTiempos}
+                estadoActual={state.tarea.estado}
               />
             )}
           </div>
-          {notificacionPendiente && (
+          {state.notificacionPendiente && (
             <ModalNotificacion
-              visible={notificacionPendiente}
+              visible={state.notificacionPendiente}
               titulo={"Confirmar Entrega"}
               descripcion={"¿Deseas confirmar que la tarea fue entregada?"}
               onConfirm={(e) => confirmarEntrega(e)}
-              onCancel={() => setNotificacionPendiente(false)}
+              onCancel={() =>
+                dispatch({ type: "CORTAR_NOTIFICACION_PENDIENTE" })
+              }
             />
           )}
-          {modalVisible && (
+          {state.modalVisible && (
             <ModalInformativo
-              modalInfo={modalInfo}
+              modalInfo={state.modalInfo}
               onClose={cerrarModal} // Pasar la función de cierre
             />
           )}
-          {loadingOpen && <Loading />}
+          {state.loadingOpen && <Loading />}
           <ModalConfirmacion
-            open={confirmarEliminar}
-            onClose={() => setConfirmarEliminar(false)} // Cierra el modal
+            open={state.confirmarEliminar}
+            onClose={() => dispatch({ type: "CANCELAR_ELIMINACION" })} // Cierra el modal
             onConfirm={eliminarTarea} // Llama a eliminarTarea al confirmar
             mensaje="¿Estás seguro de que deseas eliminar esta tarea? Esta acción no se puede deshacer."
           />
         </div>
       ) : (
-        <TareaAgente tarea={tarea} />
+        <TareaAgente tarea={state.tarea} />
       )}
     </>
   );
