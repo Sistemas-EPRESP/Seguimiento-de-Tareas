@@ -346,7 +346,7 @@ const registrarMovimiento = async (tareaId, tipo, descripcion) => {
     });
   } catch (error) {
     console.error("Error al registrar movimiento:", error);
-    throw error;
+    return { message: "Error al registrar un movimiento" };
   }
 };
 

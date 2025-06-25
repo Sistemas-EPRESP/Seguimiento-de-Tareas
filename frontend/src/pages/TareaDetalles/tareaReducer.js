@@ -23,6 +23,7 @@ export function tareaReducer(state, action) {
         actualizarTarea: !state.actualizarTarea,
       };
     }
+
     case "NOTIFICACION_PENDIENTE": {
       return {
         ...state,
@@ -33,6 +34,51 @@ export function tareaReducer(state, action) {
       return {
         ...state,
         tarea: action.tarea,
+      };
+    }
+
+    case "TAREA_FINALIZADA": {
+      return {
+        ...state,
+        modalInfo: {
+          tipo: "Exito",
+          titulo: "Operación exitosa",
+          mensaje: "La tarea ha sido finalizada",
+        },
+        modalVisible: true,
+      };
+    }
+    case "INICIA_MODIFICACION": {
+      return {
+        ...state,
+        loadingOpen: true,
+      };
+    }
+
+    case "MODIFICACION_EXITOSA": {
+      return {
+        ...state,
+        modalInfo: {
+          tipo: "Exito",
+          titulo: "Tarea Actualizada!",
+          mensaje: "¡Tarea actualizada con éxito!",
+        },
+        actualizarTarea: !state.actualizarTarea,
+        modalVisible: true,
+      };
+    }
+
+    case "ERROR_MODIFICACION": {
+      return {
+        ...state,
+        modalInfo: {
+          tipo: "Error",
+          titulo: "Error al crear la tarea",
+          mensaje:
+            action.errorMessage ||
+            "Ocurrió un error al crear la tarea. Intente nuevamente.",
+          modalVisible: true,
+        },
       };
     }
 

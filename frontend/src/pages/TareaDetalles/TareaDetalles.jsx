@@ -8,7 +8,6 @@ import ModalNotificacion from "../../layout/ModalNotificacion";
 import TareaHistorial from "./TareaHistorial";
 import { api } from "../../api/api";
 
-import ModalConfirmacion from "../../layout/ModalConfirmacion";
 import { AuthContext } from "../../context/AuthContext";
 import { TareaAgente } from "../TareaAgente";
 import SwitchModoUsuarioBtn from "./SwitchModoUsuarioBtn";
@@ -45,18 +44,6 @@ export default function TareaDetalles() {
 
     obtenerTarea();
   }, [id, state.actualizarTarea]);
-
-  const eliminarTarea = async () => {
-    dispatch({ type: "ELIMINAR_TAREA" });
-
-    try {
-      await api.delete(`tareas/${id}`);
-      dispatch({ type: "ELIMINACION_EXITOSA" });
-    } catch (error) {
-      console.error(error);
-      dispatch({ type: "ERROR_ELIMINACION" });
-    }
-  };
 
   const cerrarModal = () => {
     dispatch({ type: "CERRAR_MODAL" });
@@ -102,7 +89,9 @@ export default function TareaDetalles() {
 
       {state.modoVista === "Administrador" ? (
         <div className="flex flex-col mt-10 gap-3 md:grid md:grid-cols-8 md:auto-rows-min md:gap-5 md:mt-0">
-          {state.tarea && <FormModificarTarea tarea={state.tarea} />}
+          {state.tarea && (
+            <FormModificarTarea state={state} dispatch={dispatch} />
+          )}
 
           <div className="col-span-3">
             {state.tarea && (
@@ -141,12 +130,6 @@ export default function TareaDetalles() {
             />
           )}
           {state.loadingOpen && <Loading />}
-          <ModalConfirmacion
-            open={state.confirmarEliminar}
-            onClose={() => dispatch({ type: "CANCELAR_ELIMINACION" })} // Cierra el modal
-            onConfirm={eliminarTarea} // Llama a eliminarTarea al confirmar
-            mensaje="¿Estás seguro de que deseas eliminar esta tarea? Esta acción no se puede deshacer."
-          />
         </div>
       ) : (
         <TareaAgente tarea={state.tarea} />

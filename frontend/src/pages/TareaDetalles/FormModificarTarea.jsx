@@ -13,7 +13,7 @@ import Loading from "../../layout/Loading";
 import PropTypes from "prop-types";
 import useFormModificarTarea from "./useFormModificarTarea";
 import { api } from "../../api/api";
-export default function FormModificarTarea({ tarea }) {
+export default function FormModificarTarea({ state, dispatch }) {
   const {
     register,
     handleSubmit,
@@ -24,30 +24,20 @@ export default function FormModificarTarea({ tarea }) {
     watch,
   } = useForm({
     defaultValues: {
-      nombre: tarea.nombre,
-      fecha_inicio: new Date(tarea.fecha_inicio),
-      fecha_de_entrega: new Date(tarea.fecha_de_entrega),
-      fecha_limite: new Date(tarea.fecha_limite),
-      fecha_vencimiento: new Date(tarea.fecha_vencimiento),
-      descripcion: tarea.descripcion,
-      prioridad: tarea.prioridad,
-      estado: tarea.estado,
-      agentesSeleccionados: tarea.Agentes,
+      nombre: state.tarea.nombre,
+      fecha_inicio: new Date(state.tarea.fecha_inicio),
+      fecha_de_entrega: new Date(state.tarea.fecha_de_entrega),
+      fecha_limite: new Date(state.tarea.fecha_limite),
+      fecha_vencimiento: new Date(state.tarea.fecha_vencimiento),
+      descripcion: state.tarea.descripcion,
+      prioridad: state.tarea.prioridad,
+      estado: state.tarea.estado,
+      agentesSeleccionados: state.tarea.Agentes,
     },
     resolver: yupResolver(tareaSchema),
   });
 
-  const [actualizarTarea, setActualizarTarea] = useState(false);
   const [todosAgentes, setTodosAgentes] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalInfo, setModalInfo] = useState({
-    tipo: "",
-    visible: false,
-    titulo: "",
-    mensaje: "",
-  });
-  const [confirmarEliminar, setConfirmarEliminar] = useState(false);
-  const [loadingOpen, setLoadingOpen] = useState(false);
 
   const {
     handleEliminarAgente,
@@ -57,15 +47,11 @@ export default function FormModificarTarea({ tarea }) {
     cerrarModal,
     handleAgregarAgente,
   } = useFormModificarTarea({
-    tarea,
+    state,
     todosAgentes,
     getValues,
     setValue,
-    setLoadingOpen,
-    setActualizarTarea,
-    setModalInfo,
-    setModalVisible,
-    setConfirmarEliminar,
+    dispatch,
   });
 
   useEffect(() => {
@@ -78,7 +64,7 @@ export default function FormModificarTarea({ tarea }) {
       }
     };
     obtenerAgentes();
-  }, [tarea.id, actualizarTarea]);
+  }, [state.tarea.id, state.actualizarTarea]);
 
   return (
     <div
@@ -131,7 +117,7 @@ export default function FormModificarTarea({ tarea }) {
             <option value="Sin comenzar">Sin comenzar</option>
             <option value="Curso">Curso</option>
             <option value="Corrección">Corrección</option>
-            <option value="Bloqueado">Bloqueado</option>
+            <option value="Bloqueada">Bloqueada</option>
             <option value="Finalizado">Finalizado</option>
             <option value="Revisión">Revisión</option>
           </select>
@@ -329,23 +315,23 @@ export default function FormModificarTarea({ tarea }) {
           </button>
           <button
             className="w-full bg-red-500 text-white py-2 px-2 md:px-0 rounded-xl hover:bg-red-700 transition-colors"
-            onClick={() => setConfirmarEliminar(true)}
+            onClick={() => dispatch({ type: "ELIMINAR_TAREA" })}
             type="button"
           >
             Eliminar
           </button>
         </div>
       </form>
-      {modalVisible && (
+      {state.modalVisible && (
         <ModalInformativo
-          modalInfo={modalInfo}
+          modalInfo={state.modalInfo}
           onClose={cerrarModal} // Pasar la función de cierre
         />
       )}
-      {loadingOpen && <Loading />}
+      {state.loadingOpen && <Loading />}
       <ModalConfirmacion
-        open={confirmarEliminar}
-        onClose={() => setConfirmarEliminar(false)} // Cierra el modal
+        open={state.confirmarEliminar}
+        onClose={() => dispatch({ type: "CANCELAR_ELIMINACION" })} // Cierra el modal
         onConfirm={eliminarTarea} // Llama a eliminarTarea al confirmar
         mensaje="¿Estás seguro de que deseas eliminar esta tarea? Esta acción no se puede deshacer."
       />
@@ -354,5 +340,6 @@ export default function FormModificarTarea({ tarea }) {
 }
 
 FormModificarTarea.propTypes = {
-  tarea: PropTypes.object.isRequired,
+  state: PropTypes.object.isRequired,
+  dispatch: PropTypes.func.isRequired,
 };
