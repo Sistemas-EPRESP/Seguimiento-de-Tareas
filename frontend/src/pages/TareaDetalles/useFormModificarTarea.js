@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, isEqual } from "date-fns";
 import { es } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../api/api";
@@ -34,7 +34,33 @@ export default function useFormModificarTarea({
   const submitTarea = async (values) => {
     let notificacion = {};
     let historial = {};
-    if (state.tarea.fecha_de_entrega !== values.fecha_de_entrega) {
+
+    const formattedData = {
+      ...values,
+      agentesIds: values.agentesSeleccionados.map((agente) => agente.id),
+    };
+
+    try {
+      await api.put(`tareas/${state.tarea.id}`, formattedData);
+      if (state.tarea.estado !== values.estado) {
+        const estado = { estado: values.estado };
+        historial = {
+          tipo: "Cambio de estado",
+          descripcion: `El estado de la tarea ha sido cambiado a ${values.estado}`,
+        };
+        await api.post(`tareas/${state.tarea.id}/historial`, historial);
+        await api.put(`tareas/${state.tarea.id}/cambiarEstado`, estado);
+      }
+      dispatch({ type: "MODIFICACION_EXITOSA" });
+    } catch (error) {
+      dispatch({
+        type: "ERROR_MODIFICACION",
+        errorMessage: error.response.data.error,
+      });
+    }
+    if (
+      !isEqual(new Date(state.tarea.fecha_de_entrega), values.fecha_de_entrega)
+    ) {
       notificacion = {
         titulo: "Cambio de plazo",
         mensaje: `El plazo de entrega de la tarea a sido cambiado para el día ${format(
@@ -53,30 +79,6 @@ export default function useFormModificarTarea({
       };
 
       await api.post(`tareas/${state.tarea.id}/historial`, historial);
-
-      const formattedData = {
-        ...values,
-        agentesIds: values.agentesSeleccionados.map((agente) => agente.id),
-      };
-
-      try {
-        await api.put(`tareas/${state.tarea.id}`, formattedData);
-        if (state.tarea.estado !== values.estado) {
-          const estado = { estado: values.estado };
-          historial = {
-            tipo: "Cambio de estado",
-            descripcion: `El estado de la tarea ha sido cambiado a ${values.estado}`,
-          };
-          await api.post(`tareas/${state.tarea.id}/historial`, historial);
-          await api.put(`tareas/${state.tarea.id}/cambiarEstado`, estado);
-        }
-        dispatch({ type: "MODIFICACION_EXITOSA" });
-      } catch (error) {
-        dispatch({
-          type: "ERROR_MODIFICACION",
-          errorMessage: error.response.data.error,
-        });
-      }
     }
   };
 
