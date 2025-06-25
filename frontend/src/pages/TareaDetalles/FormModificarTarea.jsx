@@ -281,7 +281,7 @@ export default function FormModificarTarea({ state, dispatch }) {
           </label>
           <div
             id="Mostrar agentes"
-            className="p-2 bg-gray-700 rounded-md h-[112px] overflow-y-auto"
+            className="p-2 rounded-md h-[112px] overflow-y-auto"
           >
             <div className="flex flex-wrap gap-2">
               {watch("agentesSeleccionados").length > 0 ? (

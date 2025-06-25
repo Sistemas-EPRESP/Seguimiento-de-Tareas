@@ -1,7 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
-import axios from "axios";
-import config from "../api/config";
+import { api } from "../api/api";
 import Loading from "../layout/Loading";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import { format } from "date-fns";
@@ -14,7 +13,6 @@ import ModalNotificacion from "../layout/ModalNotificacion";
 
 export const TareaAgente = () => {
   const { id } = useParams();
-  const token = localStorage.getItem("token");
   const [tarea, setTarea] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [notificacionPendiente, setNotificacionPendiente] = useState(false);
@@ -49,11 +47,7 @@ export const TareaAgente = () => {
   const fetchTareaData = useCallback(async () => {
     setCargando(true);
     try {
-      const { data } = await axios.get(`${config.apiUrl}/tareas/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const { data } = await api.get(`/tareas/${id}`);
       const notificacionPendiente = data.Notificacions?.find(
         (n) => n.estado === "Pendiente" && n.titulo === "Cambio de plazo"
       );
@@ -70,7 +64,7 @@ export const TareaAgente = () => {
     } finally {
       setCargando(false);
     }
-  }, [id, token]);
+  }, [id]);
 
   useEffect(() => {
     fetchTareaData();
@@ -102,15 +96,7 @@ export const TareaAgente = () => {
       });
     }
     try {
-      const { data } = await axios.post(
-        `${config.apiUrl}/tareas/${id}/notificar`,
-        notificacion,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await api.post(`/tareas/${id}/notificar`, notificacion);
       let historial = {};
       if (tarea.estado === "Curso") {
         historial = {
@@ -123,17 +109,10 @@ export const TareaAgente = () => {
           descripcion: "El agente finalizó las correcciones",
         };
       }
-      const resp = await axios.post(
-        `${config.apiUrl}/tareas/${id}/historial`,
-        historial,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await api.post(`/tareas/${id}/historial`, historial);
       setActualizarTarea((prev) => !prev);
     } catch (error) {
+      console.error(error);
       setModalInfo({
         tipo: "Error",
         titulo: "Operación fallida",
@@ -184,28 +163,12 @@ export const TareaAgente = () => {
     if (tarea.estado === "Sin comenzar") {
       const estado = { estado: "Curso" };
       try {
-        const { data } = await axios.put(
-          `${config.apiUrl}/tareas/${id}/cambiarEstado`,
-          estado,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        await api.put(`/tareas/${id}/cambiarEstado`, estado);
         const historial = {
           tipo: "Inicio",
           descripcion: "El agente comenzó la tarea",
         };
-        const resp = await axios.post(
-          `${config.apiUrl}/tareas/${id}/historial`,
-          historial,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        await api.post(`/tareas/${id}/historial`, historial);
 
         setModalInfo({
           tipo: "Exito",
@@ -236,28 +199,12 @@ export const TareaAgente = () => {
       estado: "Aceptada",
     };
     try {
-      const resp = await axios.put(
-        `${config.apiUrl}/tareas/${id}/confirmarNotificacion`,
-        notificacion,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await api.put(`/tareas/${id}/confirmarNotificacion`, notificacion);
       const historial = {
         tipo: "Cambio de plazo",
         descripcion: "El agente aceptó el cambio de plazo",
       };
-      const resp2 = await axios.post(
-        `${config.apiUrl}/tareas/${id}/historial`,
-        historial,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await api.post(`/tareas/${id}/historial`, historial);
       setActualizarTarea((prev) => !prev);
       setModalInfo({
         tipo: "Exito",

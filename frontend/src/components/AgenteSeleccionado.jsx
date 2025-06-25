@@ -1,4 +1,5 @@
 import CloseIcon from "@mui/icons-material/Close";
+import PropTypes from "prop-types";
 
 const AgenteSeleccionado = ({ agente, onRemove }) => {
   return (
@@ -16,4 +17,8 @@ const AgenteSeleccionado = ({ agente, onRemove }) => {
   );
 };
 
+AgenteSeleccionado.propTypes = {
+  agente: PropTypes.object.isRequired,
+  onRemove: PropTypes.func.isRequired,
+};
 export default AgenteSeleccionado;
