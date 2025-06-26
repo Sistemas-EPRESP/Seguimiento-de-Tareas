@@ -6,8 +6,7 @@ import DeleteIcon from "@mui/icons-material/Delete"; // Icono de eliminar
 import { format } from "date-fns";
 import { useState } from "react";
 import { es } from "date-fns/locale";
-import axios from "axios";
-import config from "../../api/config";
+import { api } from "../../api/api";
 import CrearRevision from "./CrearRevision";
 import ModalConfirmacion from "../../layout/ModalConfirmacion";
 import PropTypes from "prop-types";
@@ -18,7 +17,6 @@ export default function Revisiones({ tareaId, revisiones, onActualizar }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [revisionAEliminar, setRevisionAEliminar] = useState(null);
   const [expandidaRevisiones, setExpandidaRevisiones] = useState([]);
-  const token = localStorage.getItem("token");
 
   const toggleExpandirRevision = (revisionId) => {
     setExpandidaRevisiones((prevIds) =>
@@ -30,11 +28,7 @@ export default function Revisiones({ tareaId, revisiones, onActualizar }) {
 
   const deleteRevision = async (id) => {
     try {
-      await axios.delete(`${config.apiUrl}/revisiones/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await api.delete(`/revisiones/${id}`);
       setListaRevisiones((prevRevisiones) =>
         prevRevisiones.filter((revision) => revision.id !== id)
       );

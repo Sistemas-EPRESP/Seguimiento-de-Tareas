@@ -3,8 +3,7 @@ import { useParams } from "react-router-dom";
 import Modal from "../../layout/Modal";
 import Select from "../../components/Select";
 import CloseIcon from "@mui/icons-material/Close";
-import axios from "axios";
-import config from "../../api/config";
+import { api } from "../../api/api";
 import ModalInformativo from "../../layout/ModalInformativo";
 import Loading from "../../layout/Loading";
 import PropTypes from "prop-types";
@@ -25,8 +24,6 @@ export default function CrearRevision({
   });
   const [modalVisible, setModalVisible] = useState(false);
   const [loadingOpen, setLoadingOpen] = useState(false);
-
-  const token = localStorage.getItem("token");
 
   const handleSelectCorreccion = (correccionSeleccionada) => {
     if (
@@ -57,31 +54,18 @@ export default function CrearRevision({
         })),
       };
 
-      const response = await axios.post(
-        `${config.apiUrl}/tareas/${tareaId}/revisiones`,
-        nuevaRevision,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await api.post(
+        `/tareas/${tareaId}/revisiones`,
+        nuevaRevision
       );
       const estado = { estado: "Corrección" };
-      await axios.put(`${config.apiUrl}/tareas/${id}/cambiarEstado`, estado, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await api.put(`/tareas/${id}/cambiarEstado`, estado);
       const historial = {
         tipo: "Corrección",
         descripcion:
           "La tarea ha sido corregida y entregada al agente para su revisión",
       };
-      await axios.post(`${config.apiUrl}/tareas/${id}/historial`, historial, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await api.post(`/tareas/${id}/historial`, historial);
 
       onRevisionCreada(response.data);
       onActualizar();
