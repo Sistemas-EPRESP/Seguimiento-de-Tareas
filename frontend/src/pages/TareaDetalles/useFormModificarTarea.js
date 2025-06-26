@@ -92,7 +92,7 @@ export default function useFormModificarTarea({
         descripcion: "La tarea ha sido finalizada",
       };
       await api.post(`tareas/${state.tarea.id}/historial`, historial);
-      dispatch({ type: "MODIFICAR_TAREA" });
+      dispatch({ type: "MODIFICACION_EXITOSA" });
     } catch (error) {
       console.error(error);
     }
