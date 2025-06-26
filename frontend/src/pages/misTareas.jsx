@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback, useContext } from "react";
-import axios from "axios";
-import config from "../api/config.js";
+import { api } from "../api/api.js";
 import { AuthContext } from "../context/AuthContext";
 import Filtro from "../layout/Filtro.jsx";
 import Loading from "../layout/Loading.jsx";
@@ -30,23 +29,17 @@ export default function MisTareas() {
   useEffect(() => {
     const fetchTareas = async () => {
       setCargando(true);
-      const token = localStorage.getItem("token");
       const userId = localStorage.getItem("userId");
 
       try {
-        const { data } = await axios.get(`${config.apiUrl}/tareas/agente`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const { data } = await api.get(`/tareas/agente`, {
           params: {
             idAgente: userId, // Esto será enviado como ?idAgente=valor
           },
         });
 
         setTareas(data);
-        const resp = await axios.get(`${config.apiUrl}/agentes/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const resp = await api.get(`/agentes/${userId}`);
 
         setAgente(resp.data);
       } catch (error) {

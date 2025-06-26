@@ -5,7 +5,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useState } from "react";
-import axios from "axios";
+import { api } from "../api/api";
 import config from "../api/config";
 import ModalInformativo from "../layout/ModalInformativo";
 import Loading from "../layout/Loading";
@@ -83,9 +83,7 @@ export default function Component({
     setLoadingOpen(true);
 
     try {
-      await axios.put(`${config.apiUrl}/correcciones/estado`, listaRevisiones, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.put(`/correcciones/estado`, listaRevisiones);
       setLoadingOpen(false);
       setModalVisible(true);
       setModalInfo({
