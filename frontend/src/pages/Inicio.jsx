@@ -51,7 +51,7 @@ export default function Inicio() {
     <div className="container mx-auto px-1">
       <div className="flex flex-col items-end md:flex-row justify-between  md:items-center border-b-2 border-b-slate-500 mb-4 pb-4">
         <h1 className="text-xl md:text-3xl font-semibold mb-4 md:mb-0">
-          Hola {usuario?.agente?.nombre} {usuario?.agente?.apellido}!
+          Sistema de Seguimiento de Tareas
         </h1>
         <div className="flex flex-row md:gap-0 gap-2 md:flex-row space-y-2 md:space-y-0 md:space-x-4">
           <h2 className="flex items-center">Filtrar por: </h2>

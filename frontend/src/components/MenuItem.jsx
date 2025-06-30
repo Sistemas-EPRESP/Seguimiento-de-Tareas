@@ -6,7 +6,7 @@ function MenuItem({ label, to, onClick, icon }) {
     <li className="mb-2">
       <Link
         to={to}
-        className="hover:bg-gray-600  flex items-center rounded pe-3 ps-2 py-2"
+        className="bg-gray-700 hover:bg-gray-600  flex items-center rounded pe-3 ps-2 py-2"
         onClick={onClick}
       >
         {icon} <span className="ms-2">{label}</span>

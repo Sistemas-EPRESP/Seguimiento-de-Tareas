@@ -7,7 +7,7 @@ function MenuItemSet({ menuItems, onClick, adminMode = false }) {
   return (
     <>
       <section>
-        <h1 className="text-xl mb-3 md:text-2xl">Principal</h1>
+        <h1 className="text-xl font-semibold mb-3 md:text-2xl">Principal</h1>
         <ul>
           {menuItems?.length > 0 &&
             menuItems.map((i, k) => {
@@ -26,7 +26,9 @@ function MenuItemSet({ menuItems, onClick, adminMode = false }) {
       </section>
       {adminMode && (
         <section>
-          <h1 className="text-xl mb-3 md:text-2xl">Información</h1>
+          <h1 className="text-xl mb-3 font-semibold md:text-2xl">
+            Información
+          </h1>
           <ul>
             <MenuItem
               label={"Reportes"}

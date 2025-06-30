@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import PersonIcon from "@mui/icons-material/Person";
 import PropTypes from "prop-types";
+import { Logout } from "@mui/icons-material";
 
 function CerrarSesion({ setCargando }) {
   const { usuario, logout } = useContext(AuthContext);
@@ -20,17 +21,27 @@ function CerrarSesion({ setCargando }) {
   };
 
   return (
-    <section className="mt-auto">
-      <h1 className=" mb-2 md:text-lg">
-        {usuario.agente.nombre + " " + usuario.agente.apellido}
-      </h1>
-      <button
-        onClick={handleLogout}
-        className="hover:bg-gray-600 bg-gray-700 flex items-center rounded px-3 py-2 w-full"
-      >
-        <PersonIcon className="mr-2" />
-        <span>Cerrar sesión</span>
-      </button>
+    <section className="mt-auto bg-gray-800 rounded-xl p-4 shadow-md">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2 text-gray-100">
+          <PersonIcon className="w-5 h-5 text-blue-400" />
+          <div className="flex flex-col">
+            <h1 className="text-base font-semibold">
+              {usuario.agente.nombre + " " + usuario.agente.apellido}{" "}
+            </h1>
+            <span className="text-sm text-gray-400 font-normal italic">
+              {usuario.rol}
+            </span>
+          </div>
+        </div>
+        <button
+          onClick={handleLogout}
+          title="Cerrar sesión"
+          className="flex items-center py-2 text-sm ps-1 hover:bg-gray-600 text-white rounded-lg transition-colors"
+        >
+          <Logout className="mr-2 w-2 h-2" />
+        </button>
+      </div>
     </section>
   );
 }
