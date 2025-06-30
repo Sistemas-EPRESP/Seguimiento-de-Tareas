@@ -1,10 +1,9 @@
-import { useState, useCallback, useContext } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 //import { isToday, isThisWeek, parseISO, isFuture, addDays } from "date-fns";
 import TareaCard from "../components/TareaCard.jsx";
 import Filtro from "../layout/Filtro.jsx";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import { AuthContext } from "../context/AuthContext";
 import useAgentes from "../hooks/useAgentes.js";
 import useTareas from "../hooks/useTareas.js";
 
@@ -12,7 +11,6 @@ const ALL_UNFINISHED_TASKS = -1;
 
 export default function Inicio() {
   const navigate = useNavigate();
-  const { usuario } = useContext(AuthContext);
   //const [todayTasks, setTodayTasks] = useState([]);
   //const [weekTasks, setWeekTasks] = useState([]);
   //const [futureTasks, setFutureTasks] = useState([]);

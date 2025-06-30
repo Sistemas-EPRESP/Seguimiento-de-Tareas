@@ -9,8 +9,6 @@ function CerrarSesion({ setCargando }) {
   const { usuario, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  console.log("usuario: ", usuario);
-
   const handleLogout = () => {
     setCargando(true);
     setTimeout(() => {
@@ -26,7 +24,7 @@ function CerrarSesion({ setCargando }) {
         <div className="flex items-center space-x-2 text-gray-100">
           <PersonIcon className="w-5 h-5 text-blue-400" />
           <div className="flex flex-col">
-            <h1 className="text-base font-semibold">
+            <h1 className="text-base font-semibold text-nowrap">
               {usuario.agente.nombre + " " + usuario.agente.apellido}{" "}
             </h1>
             <span className="text-sm text-gray-400 font-normal italic">
@@ -37,9 +35,9 @@ function CerrarSesion({ setCargando }) {
         <button
           onClick={handleLogout}
           title="Cerrar sesión"
-          className="flex items-center py-2 text-sm ps-1 hover:bg-gray-600 text-white rounded-lg transition-colors"
+          className="flex items-center py-2 text-sm md:px-2 hover:bg-gray-600 text-white rounded-lg transition-colors"
         >
-          <Logout className="mr-2 w-2 h-2" />
+          <Logout className=" w-2 h-2" />
         </button>
       </div>
     </section>
