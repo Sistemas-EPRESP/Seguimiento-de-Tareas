@@ -96,7 +96,6 @@ export default function TareaDetalles() {
           <div className="col-span-3">
             {state.tarea && (
               <Revisiones
-                tareaId={id}
                 tarea={state.tarea}
                 revisiones={state.tarea.Revisions}
                 onActualizar={() => dispatch({ type: "ACTUALIZAR_TAREA" })}

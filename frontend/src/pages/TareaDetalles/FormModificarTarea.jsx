@@ -300,25 +300,27 @@ export default function FormModificarTarea({ state, dispatch }) {
             </div>
           </div>
         </div>
-        <button
-          className="bg-green-500 w-full rounded-xl py-2 px-4 hover:bg-green-600"
-          onClick={finalizarTarea}
-        >
-          Finalizado
-        </button>
+        {state.tarea.estado !== "Finalizado" && (
+          <button
+            className="bg-green-500 w-full rounded-xl py-2 px-4 hover:bg-green-600"
+            onClick={finalizarTarea}
+          >
+            Finalizar tarea
+          </button>
+        )}
         <div className="flex gap-1 md:gap-4 col-start-2">
           <button
             type="submit"
             className="bg-blue-500 w-full rounded-xl py-2 px-1.5 md:px-4 hover:bg-blue-600"
           >
-            Actualizar
+            Aplicar cambios
           </button>
           <button
             className="w-full bg-red-500 text-white py-2 px-2 md:px-0 rounded-xl hover:bg-red-700 transition-colors"
             onClick={() => dispatch({ type: "ELIMINAR_TAREA" })}
             type="button"
           >
-            Eliminar
+            Eliminar tarea
           </button>
         </div>
       </form>
