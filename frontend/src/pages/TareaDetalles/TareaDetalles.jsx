@@ -4,7 +4,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import Revisiones from "./Revisiones";
 import ModalInformativo from "../../layout/ModalInformativo";
 import Loading from "../../layout/Loading";
-import ModalNotificacion from "../../layout/ModalNotificacion";
+import InfoIcon from "@mui/icons-material/Info";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import TareaHistorial from "./TareaHistorial";
 import { api } from "../../api/api";
 
@@ -101,6 +102,26 @@ export default function TareaDetalles() {
                 onActualizar={() => dispatch({ type: "ACTUALIZAR_TAREA" })}
               />
             )}
+            {state.notificacionPendiente && (
+              <div className="px-6 py-4 bg-gray-800 rounded-lg mt-4 ">
+                <div className="text-lg font-bold animate-pulse">
+                  <InfoIcon className="mr-2 mb-1 h-6" />
+                  Entrega pendiente
+                </div>
+
+                <span className="animate-pulse">
+                  Los agentes indicaron que terminaron con la tarea y sus
+                  revisiones.
+                </span>
+                <button
+                  className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 mt-4 w-full rounded-lg"
+                  onClick={(e) => confirmarEntrega(e)}
+                >
+                  <TaskAltIcon className="mr-2" />
+                  Confirmar entrega satisfactoria
+                </button>
+              </div>
+            )}
           </div>
           <div className="col-span-8">
             {state.tarea && (
@@ -111,17 +132,6 @@ export default function TareaDetalles() {
               />
             )}
           </div>
-          {state.notificacionPendiente && (
-            <ModalNotificacion
-              visible={state.notificacionPendiente}
-              titulo={"Confirmar Entrega"}
-              descripcion={"¿Deseas confirmar que la tarea fue entregada?"}
-              onConfirm={(e) => confirmarEntrega(e)}
-              onCancel={() =>
-                dispatch({ type: "CORTAR_NOTIFICACION_PENDIENTE" })
-              }
-            />
-          )}
           {state.modalVisible && (
             <ModalInformativo
               modalInfo={state.modalInfo}

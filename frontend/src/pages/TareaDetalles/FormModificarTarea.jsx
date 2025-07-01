@@ -9,6 +9,7 @@ import AgenteSeleccionado from "../../components/AgenteSeleccionado";
 import ModalInformativo from "../../layout/ModalInformativo";
 import ModalConfirmacion from "../../layout/ModalConfirmacion";
 import Loading from "../../layout/Loading";
+import DoneIcon from "@mui/icons-material/Done";
 
 import PropTypes from "prop-types";
 import useFormModificarTarea from "./useFormModificarTarea";
@@ -118,7 +119,9 @@ export default function FormModificarTarea({ state, dispatch }) {
             <option value="Curso">Curso</option>
             <option value="Corrección">Corrección</option>
             <option value="Bloqueada">Bloqueada</option>
-            <option value="Finalizado">Finalizado</option>
+            {!state.notificacionPendiente && (
+              <option value="Finalizado">Finalizado</option>
+            )}
             <option value="Revisión">Revisión</option>
           </select>
           {errors.estado?.type === "required" && (
@@ -300,13 +303,23 @@ export default function FormModificarTarea({ state, dispatch }) {
             </div>
           </div>
         </div>
-        {state.tarea.estado !== "Finalizado" && (
+        {state.tarea.estado !== "Finalizado" ? (
           <button
-            className="bg-green-500 w-full rounded-xl py-2 px-4 hover:bg-green-600"
+            className="bg-green-500 w-full rounded-xl py-2 px-4 enabled:hover:bg-green-600 disabled:text-gray-300 disabled:cursor-not-allowed "
             onClick={finalizarTarea}
+            disabled={state.tarea.Notificacions.length > 0}
+            title={
+              state.tarea.Notificacions.length > 0
+                ? "Hay entregas pendientes por confirmar."
+                : "Dar por finalizada la tarea"
+            }
           >
             Finalizar tarea
           </button>
+        ) : (
+          <div className="text-green-300 flex items-center gap-2 text-lg">
+            <DoneIcon /> La tarea fue finalizada.
+          </div>
         )}
         <div className="flex gap-1 md:gap-4 col-start-2">
           <button

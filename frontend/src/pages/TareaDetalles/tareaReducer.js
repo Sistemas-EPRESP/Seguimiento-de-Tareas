@@ -46,6 +46,10 @@ export function tareaReducer(state, action) {
           mensaje: "La tarea ha sido finalizada",
         },
         modalVisible: true,
+        tarea: {
+          ...state.tarea,
+          estado: "Finalizado",
+        },
       };
     }
     case "INICIA_MODIFICACION": {
