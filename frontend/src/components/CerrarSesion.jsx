@@ -21,7 +21,7 @@ function CerrarSesion({ setCargando }) {
   return (
     <section className="mt-auto bg-gray-800 rounded-xl p-4 shadow-md">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2 text-gray-100">
+        <div className="flex items-center gap-3 text-gray-100">
           <PersonIcon className="w-5 h-5 text-blue-400" />
           <div className="flex flex-col">
             <h1 className="text-base font-semibold text-nowrap">
