@@ -6,6 +6,7 @@ import Filtro from "../layout/Filtro.jsx";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import useAgentes from "../hooks/useAgentes.js";
 import useTareas from "../hooks/useTareas.js";
+import { hayNotificacionesPendientes } from "../utils/notificacionesPendientes.js";
 
 const ALL_UNFINISHED_TASKS = -1;
 
@@ -106,6 +107,9 @@ export default function Inicio() {
         {!loadingTareas && tareas.length > 0 ? (
           tareas
             .filter(filtrarTareas)
+            .sort((tA, tB) =>
+              hayNotificacionesPendientes(tA) ? -1 : tA.id - tB.id
+            )
             .map((tarea) => <TareaCard key={tarea.id} tarea={tarea} />)
         ) : (
           <p className="text-gray-500 mb-8">No hay tareas disponibles.</p>
