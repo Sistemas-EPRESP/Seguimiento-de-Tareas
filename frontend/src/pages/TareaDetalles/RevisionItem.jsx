@@ -11,8 +11,8 @@ function RevisionItem({ revision, setters }) {
   };
 
   return (
-    <li className="bg-gray-700 border border-gray-600 rounded-lg">
-      <div className="flex justify-between items-center px-4 py-2">
+    <li>
+      <div className="flex justify-between items-center ps-1 pe-4 py-2">
         <div className="flex-1 text-left text-sm hover:rounded-lg focus:outline-none">
           <span>
             {format(
@@ -23,14 +23,17 @@ function RevisionItem({ revision, setters }) {
           </span>
         </div>
         <div className="flex space-x-2">
-          <button className="text-red-400 hover:text-red-500">
+          <button
+            className="text-gray-300 hover:text-red-500"
+            title="Eliminar revisiones"
+          >
             <DeleteIcon onClick={() => handleEliminarClick(revision)} />
           </button>
         </div>
       </div>
 
       <div className={`overflow-hidden transition-all duration-300`}>
-        <div className="px-4 pb-2 bg-gray-700 rounded-b-lg">
+        <div className="px-4 pb-2 rounded-b-lg">
           {revision.Correccions.length > 0 && (
             <ul className="space-y-1">
               {revision.Correccions.map((correccion) => (
