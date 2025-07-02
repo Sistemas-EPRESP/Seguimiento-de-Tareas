@@ -9,7 +9,7 @@ function MenuItem({ label, to, onClick, icon }) {
         className="bg-gray-700 hover:bg-gray-600  flex items-center rounded pe-3 ps-2 py-2"
         onClick={onClick}
       >
-        {icon} <span className="ms-2">{label}</span>
+        {icon} <span className="ms-2 hidden lg:block">{label}</span>
       </Link>
     </li>
   );

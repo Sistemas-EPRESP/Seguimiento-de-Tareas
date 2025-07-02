@@ -39,14 +39,14 @@ const Menu = () => {
       {/* Menú lateral */}
       <div
         ref={menuRef}
-        className={`h-screen bg-gray-800 text-white p-4 flex flex-col overflow-y-auto custom-scrollbar transition-transform md:translate-x-0 
+        className={`h-screen bg-gray-800 text-white p-4 flex fixed flex-col overflow-y-auto custom-scrollbar transition-transform md:translate-x-0 
         ${
           isOpen ? "translate-x-0 w-52 z-40" : "-translate-x-full w-64 md:z-40 "
-        } md:w-1/6 min-w-[220px] -mr-[260px] md:mr-0`}
+        } md:w-1/6 -mr-[260px] md:mr-0`}
       >
         <div>
           <div className="flex flex-col items-center mt-2 mb-3">
-            <div className="bg-gray-700 rounded-full flex justify-center items-center h-[130px] w-[130px] md:h-[160px] md:w-[160px]">
+            <div className="bg-gray-700 rounded-full flex justify-center items-center h-[130px] w-5/6 max-w-[150px] md:h-[160px]">
               <img
                 src={Logo512}
                 className="h-[130px] pr-4 md:h-[180px]"

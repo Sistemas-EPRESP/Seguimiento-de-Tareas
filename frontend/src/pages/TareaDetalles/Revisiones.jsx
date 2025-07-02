@@ -1,31 +1,15 @@
-import TaskAltIcon from "@mui/icons-material/TaskAlt";
-import HighlightOffIcon from "@mui/icons-material/HighlightOff";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import DeleteIcon from "@mui/icons-material/Delete"; // Icono de eliminar
-import { format } from "date-fns";
 import { useState } from "react";
-import { es } from "date-fns/locale";
 import { api } from "../../api/api";
 import CrearRevision from "./CrearRevision";
 import ModalConfirmacion from "../../layout/ModalConfirmacion";
 import PropTypes from "prop-types";
+import RevisionItem from "./RevisionItem";
 
 export default function Revisiones({ tarea, revisiones, onActualizar }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [listaRevisiones, setListaRevisiones] = useState(revisiones);
   const [modalVisible, setModalVisible] = useState(false);
   const [revisionAEliminar, setRevisionAEliminar] = useState(null);
-  const [expandidaRevisiones, setExpandidaRevisiones] = useState([]);
-
-  const toggleExpandirRevision = (revisionId) => {
-    setExpandidaRevisiones((prevIds) =>
-      prevIds.includes(revisionId)
-        ? prevIds.filter((id) => id !== revisionId)
-        : [...prevIds, revisionId]
-    );
-  };
-
   const deleteRevision = async (id) => {
     try {
       await api.delete(`/revisiones/${id}`);
@@ -35,11 +19,6 @@ export default function Revisiones({ tarea, revisiones, onActualizar }) {
     } catch (error) {
       console.error(error);
     }
-  };
-
-  const handleEliminarClick = (revision) => {
-    setRevisionAEliminar(revision);
-    setModalVisible(true);
   };
 
   const handleConfirmarEliminar = () => {
@@ -62,76 +41,11 @@ export default function Revisiones({ tarea, revisiones, onActualizar }) {
           {listaRevisiones.length > 0 ? (
             <ul className="space-y-2">
               {listaRevisiones.map((revision) => (
-                <li
+                <RevisionItem
+                  revision={revision}
+                  setters={{ setRevisionAEliminar, setModalVisible }}
                   key={revision.id}
-                  className="bg-gray-700 border border-gray-600 rounded-lg"
-                >
-                  <div className="flex justify-between items-center px-4 py-2">
-                    <button
-                      className="flex-1 text-left hover:rounded-lg focus:outline-none"
-                      onClick={() => toggleExpandirRevision(revision.id)}
-                    >
-                      <span>
-                        {format(
-                          new Date(revision.fecha_hora),
-                          "EEEE, d 'de' MMMM 'de' yyyy, h:mm aa",
-                          { locale: es }
-                        )}
-                      </span>
-                    </button>
-                    <div className="flex space-x-2">
-                      <button className="text-red-400 hover:text-red-500">
-                        <DeleteIcon
-                          onClick={() => handleEliminarClick(revision)}
-                        />
-                      </button>
-                    </div>
-                    {expandidaRevisiones.includes(revision.id) ? (
-                      <ExpandLessIcon className="text-white" />
-                    ) : (
-                      <ExpandMoreIcon className="text-white" />
-                    )}
-                  </div>
-
-                  <div
-                    className={`overflow-hidden transition-all duration-300 ${
-                      expandidaRevisiones.includes(revision.id)
-                        ? "max-h-screen"
-                        : "max-h-0"
-                    }`}
-                  >
-                    <div className="p-4 bg-gray-700 rounded-b-lg">
-                      {revision.Correccions.length > 0 && (
-                        <ul className="space-y-1">
-                          {revision.Correccions.map((correccion) => (
-                            <li
-                              key={correccion.id}
-                              className={`flex items-center ${
-                                correccion.estado
-                                  ? "line-through text-gray-400"
-                                  : ""
-                              }`}
-                            >
-                              {correccion.estado ? (
-                                <TaskAltIcon
-                                  className="mr-2 text-green-400"
-                                  style={{ width: "18px" }}
-                                />
-                              ) : (
-                                <HighlightOffIcon
-                                  className="mr-2 text-red-400"
-                                  style={{ width: "18px" }}
-                                />
-                              )}
-                              {correccion.tipo} -{" "}
-                              {correccion.estado ? "Realizada" : "Pendiente"}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  </div>
-                </li>
+                />
               ))}
             </ul>
           ) : (
