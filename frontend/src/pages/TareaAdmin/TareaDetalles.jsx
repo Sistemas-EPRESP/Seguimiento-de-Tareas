@@ -10,7 +10,7 @@ import TareaHistorial from "./TareaHistorial";
 import { api } from "../../api/api";
 
 import { AuthContext } from "../../context/AuthContext";
-import { TareaAgente } from "../TareaAgente";
+import { TareaAgente } from "../TareaAgente/TareaAgente";
 import SwitchModoUsuarioBtn from "./SwitchModoUsuarioBtn";
 import FormModificarTarea from "./FormModificarTarea";
 

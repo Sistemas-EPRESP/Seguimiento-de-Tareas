@@ -1,32 +1,21 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useState, useCallback } from "react";
-import { api } from "../api/api";
-import Loading from "../layout/Loading";
+import { useEffect, useState, useCallback, useReducer } from "react";
+import { api } from "../../api/api";
+import Loading from "../../layout/Loading";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import RevisionesAgente from "../components/RevisionesAgente";
-import ModalInformativo from "../layout/ModalInformativo";
-import ModalNotificacion from "../layout/ModalNotificacion";
+import RevisionesAgente from "../../components/RevisionesAgente";
+import ModalInformativo from "../../layout/ModalInformativo";
+import ModalNotificacion from "../../layout/ModalNotificacion";
+import { tareaAgenteReducer, initialState } from "./tareaAgenteReducer";
 
 export const TareaAgente = () => {
   const { id } = useParams();
-  const [tarea, setTarea] = useState(null);
-  const [cargando, setCargando] = useState(false);
-  const [notificacionPendiente, setNotificacionPendiente] = useState(false);
-  const [botonFinalizarHabilitado, setBotonFinalizarHabilitado] =
-    useState(false);
-  const [botonComenzarHabilitado, setBotonComenzarHabilitado] = useState(false);
+  const [state, dispatch] = useReducer(tareaAgenteReducer, initialState);
   const [actualizarTarea, setActualizarTarea] = useState(false);
-
-  const [modalInfo, setModalInfo] = useState({
-    tipo: "",
-    titulo: "",
-    mensaje: "",
-  });
-  const [modalVisible, setModalVisible] = useState(false); // Controla la visibilidad del modal
 
   const priorityColor = {
     Alta: "bg-[#EF4444] text-white",
@@ -45,7 +34,7 @@ export const TareaAgente = () => {
   };
 
   const fetchTareaData = useCallback(async () => {
-    setCargando(true);
+    dispatch({ type: "INICIA_FETCH_TAREA" });
     try {
       const { data } = await api.get(`/tareas/${id}`);
       const notificacionPendiente = data.Notificacions?.find(
@@ -53,18 +42,17 @@ export const TareaAgente = () => {
           n.estado === "Pendiente" &&
           (n.titulo === "Cambio de plazo" || n.titulo === "Nuevas revisiones")
       );
-      if (notificacionPendiente) {
-        setNotificacionPendiente(notificacionPendiente);
-      }
 
-      setTarea(data);
-      setBotonFinalizarHabilitado(verificarFinalizar(data));
-      //setBotonFinalizarHabilitado(true);
-      setBotonComenzarHabilitado(verificarComenzar(data));
+      dispatch({
+        type: "FINALIZA_FETCH_TAREA",
+        tarea: data,
+        botonFinalizarHabilitado: verificarFinalizar(data),
+        botonComenzarHabilitado: verificarComenzar(data),
+        notificacionPendiente: notificacionPendiente || false,
+      });
     } catch (error) {
+      dispatch({ type: "ERROR_FETCH_TAREA" });
       console.error("Error al obtener los detalles de la tarea", error);
-    } finally {
-      setCargando(false);
     }
   }, [id]);
 
@@ -72,35 +60,25 @@ export const TareaAgente = () => {
     fetchTareaData();
   }, [fetchTareaData, actualizarTarea]);
 
-  const finalizarTarea = async (e) => {
+  const entregarTarea = async (e) => {
     e.preventDefault();
-    setCargando(true);
-    var notificacion = {};
-    if (tarea.estado === "Curso") {
+    dispatch({ type: "INICIA_ENTREGAR_TAREA" });
+    let notificacion = {};
+    if (state.tarea.estado === "Curso") {
       notificacion = {
         titulo: "Finalizacion de tarea",
         mensaje: "El agente indicó que finalizó la tarea",
       };
-      setModalInfo({
-        tipo: "Exito",
-        titulo: "Operación exitosa",
-        mensaje: "Haz finalizado la tarea!",
-      });
     } else {
       notificacion = {
         titulo: "Finalizacion de correcciones",
         mensaje: "El agente indicó que finalizó las correcciones",
       };
-      setModalInfo({
-        tipo: "Exito",
-        titulo: "Operación exitosa",
-        mensaje: "Haz finalizado las correcciones!",
-      });
     }
     try {
       await api.post(`/tareas/${id}/notificar`, notificacion);
       let historial = {};
-      if (tarea.estado === "Curso") {
+      if (state.tarea.estado === "Curso") {
         historial = {
           tipo: "Finalización",
           descripcion: "El agente finalizó la tarea",
@@ -112,17 +90,12 @@ export const TareaAgente = () => {
         };
       }
       await api.post(`/tareas/${id}/historial`, historial);
+
+      dispatch({ type: "EXITO_ENTREGA" });
       setActualizarTarea((prev) => !prev);
     } catch (error) {
       console.error(error);
-      setModalInfo({
-        tipo: "Error",
-        titulo: "Operación fallida",
-        mensaje: "No se pudo realizar esta acción!",
-      });
-    } finally {
-      setCargando(false);
-      setModalVisible(true);
+      dispatch({ type: "ERROR_ENTREGA" });
     }
   };
 
@@ -161,8 +134,8 @@ export const TareaAgente = () => {
   };
 
   const comenzarTarea = async () => {
-    setCargando(true);
-    if (tarea.estado === "Sin comenzar") {
+    dispatch({ type: "INICIA_COMENZAR_TAREA" });
+    if (state.tarea.estado === "Sin comenzar") {
       const estado = { estado: "Curso" };
       try {
         await api.put(`/tareas/${id}/cambiarEstado`, estado);
@@ -172,41 +145,29 @@ export const TareaAgente = () => {
         };
         await api.post(`/tareas/${id}/historial`, historial);
 
-        setModalInfo({
-          tipo: "Exito",
-          titulo: "Operación exitosa",
-          mensaje: "Haz comenzado la tarea!",
-        });
+        dispatch({ type: "EXITO_COMENZAR_TAREA" });
         setActualizarTarea((prev) => !prev);
       } catch (error) {
+        dispatch({ type: "ERROR_COMENZAR_TAREA" });
         console.error(error);
-      } finally {
-        setCargando(false);
-        setModalVisible(true);
       }
     } else {
-      setCargando(false);
-      setModalVisible(true);
-      setModalInfo({
-        tipo: "Error",
-        titulo: "Operación fallida",
-        mensaje: "No se pudo realizar esta acción!",
-      });
+      dispatch({ type: "ERROR_COMENZAR_TAREA" });
     }
   };
 
   const confirmarNotificacionNuevasRevisiones = async () => {
-    const notificacion = tarea.Notificacions[0];
+    const notificacion = state.tarea.Notificacions[0];
     const body = {
       idNotificacion: notificacion.id,
       estado: "Aceptada",
     };
     await api.put(`/tareas/${id}/confirmarNotificacion`, body);
-    setNotificacionPendiente(false);
+    dispatch({ type: "CERRAR_NOTIFICACION" });
   };
 
   const confirmarNotificacionCambioPlazo = async () => {
-    const notificacion = tarea.Notificacions[0];
+    const notificacion = state.tarea.Notificacions[0];
 
     const body = {
       idNotificacion: notificacion.id,
@@ -220,22 +181,10 @@ export const TareaAgente = () => {
       };
       await api.post(`/tareas/${id}/historial`, historial);
       setActualizarTarea((prev) => !prev);
-      setModalInfo({
-        tipo: "Exito",
-        titulo: "Operación exitosa",
-        mensaje: "Haz aceptado el cambio de plazo!",
-      });
+      dispatch({ type: "EXITO_CONFIRMAR_CAMBIO_PLAZO" });
     } catch (error) {
       console.error(error);
-      setModalInfo({
-        tipo: "Error",
-        titulo: "Error de servidor",
-        mensaje: "No se pudo completar esta acción!",
-      });
-    } finally {
-      setNotificacionPendiente(false);
-      setCargando(false);
-      setModalVisible(true);
+      dispatch({ type: "ERROR_CONFIRMAR_CAMBIO_PLAZO" });
     }
   };
 
@@ -243,7 +192,7 @@ export const TareaAgente = () => {
     fetchTareaData();
   };
 
-  if (cargando || !tarea || !tarea.estado) {
+  if (state.cargando || !state.tarea || !state.tarea.estado) {
     return <Loading />;
   }
 
@@ -256,28 +205,28 @@ export const TareaAgente = () => {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start">
             <h1 className="text-2xl mb-2 md:mb-0 sm:text-3xl font-semibold">
-              {tarea.nombre}
+              {state.tarea.nombre}
             </h1>
             <div className="flex items-start gap-2">
               <span
                 className={`px-2 py-1 rounded-lg text-xs font-semibold ${
-                  priorityColor[tarea.prioridad]
+                  priorityColor[state.tarea.prioridad]
                 }`}
               >
-                {tarea.prioridad}
+                {state.tarea.prioridad}
               </span>
               <span
                 className={`px-2 py-1 rounded-lg text-xs font-semibold ${
-                  statusColor[tarea.estado]
+                  statusColor[state.tarea.estado]
                 }`}
               >
-                {tarea.estado}
+                {state.tarea.estado}
               </span>
             </div>
           </div>
           <div className="text-gray-300 max-h-24 overflow-y-auto">
-            {tarea.descripcion ? (
-              <p>{tarea.descripcion}</p>
+            {state.tarea.descripcion ? (
+              <p>{state.tarea.descripcion}</p>
             ) : (
               <p className="text-gray-400 italic">No hay descripción.</p>
             )}
@@ -286,9 +235,9 @@ export const TareaAgente = () => {
             <CalendarTodayIcon style={{ width: "20px" }} />
             <label>Asignada:</label>
             <span>
-              {tarea.fecha_inicio
+              {state.tarea.fecha_inicio
                 ? format(
-                    new Date(tarea.fecha_inicio),
+                    new Date(state.tarea.fecha_inicio),
                     "EEEE, d 'de' MMMM 'de' yyyy",
                     {
                       locale: es,
@@ -301,9 +250,9 @@ export const TareaAgente = () => {
             <CalendarTodayIcon style={{ width: "20px" }} />
             <label>Fecha de entrega:</label>
             <span>
-              {tarea.fecha_de_entrega
+              {state.tarea.fecha_de_entrega
                 ? format(
-                    new Date(tarea.fecha_de_entrega),
+                    new Date(state.tarea.fecha_de_entrega),
                     "EEEE, d 'de' MMMM 'de' yyyy",
                     {
                       locale: es,
@@ -316,9 +265,11 @@ export const TareaAgente = () => {
         <div className="flex flex-col sm:flex-row justify-between gap-4">
           <button
             onClick={comenzarTarea}
-            disabled={!botonComenzarHabilitado}
+            disabled={!state.botonComenzarHabilitado}
             className={`flex justify-center items-center py-2 px-6 gap-2 rounded-xl bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto ${
-              !botonComenzarHabilitado ? "opacity-50 cursor-not-allowed" : ""
+              !state.botonComenzarHabilitado
+                ? "opacity-50 cursor-not-allowed"
+                : ""
             }`}
           >
             <PlayCircleOutlineIcon style={{ width: "20px", height: "20px" }} />
@@ -326,10 +277,12 @@ export const TareaAgente = () => {
           </button>
 
           <button
-            onClick={finalizarTarea}
-            disabled={!botonFinalizarHabilitado}
+            onClick={entregarTarea}
+            disabled={!state.botonFinalizarHabilitado}
             className={`flex justify-center items-center py-2 px-6 gap-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white w-full sm:w-auto ${
-              !botonFinalizarHabilitado ? "opacity-50 cursor-not-allowed" : ""
+              !state.botonFinalizarHabilitado
+                ? "opacity-50 cursor-not-allowed"
+                : ""
             }`}
           >
             <CheckCircleOutlineIcon style={{ width: "20px", height: "20px" }} />
@@ -340,42 +293,42 @@ export const TareaAgente = () => {
 
       <RevisionesAgente
         tareaId={id}
-        revisiones={tarea.Revisions}
+        revisiones={state.tarea.Revisions}
         onCorreccionesEnviadas={handleCorreccionesEnviadas}
       />
 
-      {modalVisible && (
+      {state.modalVisible && (
         <ModalInformativo
-          modalInfo={modalInfo}
-          onClose={() => setModalVisible(false)}
+          modalInfo={state.modalInfo}
+          onClose={() => dispatch({ type: "CERRAR_MODAL" })}
         />
       )}
 
       {/* Modal para "Nuevas revisiones" */}
-      {notificacionPendiente &&
-        notificacionPendiente.titulo === "Nuevas revisiones" && (
+      {state.notificacionPendiente &&
+        state.notificacionPendiente.titulo === "Nuevas revisiones" && (
           <ModalNotificacion
-            visible={notificacionPendiente}
-            titulo={notificacionPendiente.titulo}
+            visible={state.notificacionPendiente}
+            titulo={state.notificacionPendiente.titulo}
             descripcion="Los administradores agregaron revisiones a su tarea."
             onConfirm={confirmarNotificacionNuevasRevisiones}
-            onCancel={() => setNotificacionPendiente(false)}
+            onCancel={() => dispatch({ type: "CERRAR_NOTIFICACION" })}
           />
         )}
 
       {/* Modal para "Cambio de plazo" */}
-      {notificacionPendiente &&
-        notificacionPendiente.titulo === "Cambio de plazo" && (
+      {state.notificacionPendiente &&
+        state.notificacionPendiente.titulo === "Cambio de plazo" && (
           <ModalNotificacion
-            visible={notificacionPendiente}
-            titulo={notificacionPendiente.titulo}
+            visible={state.notificacionPendiente}
+            titulo={state.notificacionPendiente.titulo}
             descripcion={`El plazo de entrega de la tarea ha sido modificado para el día ${format(
-              tarea.fecha_de_entrega,
+              state.tarea.fecha_de_entrega,
               "EEEE d 'de' MMMM",
               { locale: es }
             )}`}
             onConfirm={confirmarNotificacionCambioPlazo}
-            onCancel={() => setNotificacionPendiente(false)}
+            onCancel={() => dispatch({ type: "CERRAR_NOTIFICACION" })}
           />
         )}
     </div>
