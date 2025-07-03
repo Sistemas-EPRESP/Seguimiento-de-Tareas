@@ -5,11 +5,11 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useState } from "react";
-import { api } from "../api/api";
-import config from "../api/config";
-import ModalInformativo from "../layout/ModalInformativo";
-import Loading from "../layout/Loading";
-import ModalConfirmacion from "../layout/ModalConfirmacion";
+import { api } from "../../api/api";
+import config from "../../api/config";
+import ModalInformativo from "../../layout/ModalInformativo";
+import Loading from "../../layout/Loading";
+import ModalConfirmacion from "../../layout/ModalConfirmacion";
 
 export default function Component({
   tareaId,

@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useReducer } from "react";
 import { api } from "../../api/api";
 import Loading from "../../layout/Loading";
 
-import RevisionesAgente from "../../components/RevisionesAgente";
+import Revisiones from "./Revisiones";
 import { tareaAgenteReducer, initialState } from "./tareaAgenteReducer";
 import MainInfo from "./MainInfo";
 import Description from "./Description";
@@ -94,7 +94,7 @@ export const TareaAgente = () => {
           setActualizarTarea={setActualizarTarea}
         />
       </MainInfo>
-      <RevisionesAgente
+      <Revisiones
         tareaId={id}
         revisiones={state.tarea.Revisions}
         onCorreccionesEnviadas={handleCorreccionesEnviadas}
