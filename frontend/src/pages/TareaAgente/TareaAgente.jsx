@@ -11,6 +11,8 @@ import ModalInformativo from "../../layout/ModalInformativo";
 import ModalNotificacion from "../../layout/ModalNotificacion";
 import { tareaAgenteReducer, initialState } from "./tareaAgenteReducer";
 import MainInfo from "./MainInfo";
+import Description from "./Description";
+import TareaActions from "./TareaActions";
 
 export const TareaAgente = () => {
   const { id } = useParams();
@@ -120,11 +122,14 @@ export const TareaAgente = () => {
 
   return (
     <div className="flex flex-col md:flex-row gap-6 ">
-      <MainInfo
-        state={state}
-        dispatch={dispatch}
-        setActualizarTarea={setActualizarTarea}
-      />
+      <MainInfo>
+        <Description state={state} />
+        <TareaActions
+          state={state}
+          dispatch={dispatch}
+          setActualizarTarea={setActualizarTarea}
+        />
+      </MainInfo>
       <RevisionesAgente
         tareaId={id}
         revisiones={state.tarea.Revisions}
