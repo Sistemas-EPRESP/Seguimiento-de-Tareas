@@ -5,6 +5,7 @@ import { api } from "../api/api.js";
 import { AuthContext } from "../context/AuthContext";
 import Loading from "../layout/Loading.jsx";
 import TareaCardAgente from "../components/TareaCardAgente.jsx";
+import { hayNotificacionesPendientesParaPersonal } from "../utils/notificacionesPendientes.js";
 
 export default function Inicio() {
   const { usuario } = useContext(AuthContext);
@@ -85,6 +86,12 @@ export default function Inicio() {
           {tareas.length > 0 ? (
             tareas
               .filter(filtrarTareas)
+              .sort(
+                (tA, tB) =>
+                  hayNotificacionesPendientesParaPersonal(tA)
+                    ? -1
+                    : tA.id - tB.id // colocar primero las tareas con novedades
+              )
               .map((tarea) => <TareaCardAgente key={tarea.id} tarea={tarea} />)
           ) : (
             <p className="text-gray-500 mb-8">No hay tareas disponibles.</p>

@@ -6,7 +6,7 @@ import Filtro from "../layout/Filtro.jsx";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import useAgentes from "../hooks/useAgentes.js";
 import useTareas from "../hooks/useTareas.js";
-import { hayNotificacionesPendientes } from "../utils/notificacionesPendientes.js";
+import { hayNotificacionesPendientesParaAdmin } from "../utils/notificacionesPendientes.js";
 
 const ALL_UNFINISHED_TASKS = -1;
 
@@ -107,8 +107,9 @@ export default function Inicio() {
         {!loadingTareas && tareas.length > 0 ? (
           tareas
             .filter(filtrarTareas)
-            .sort((tA, tB) =>
-              hayNotificacionesPendientes(tA) ? -1 : tA.id - tB.id
+            .sort(
+              (tA, tB) =>
+                hayNotificacionesPendientesParaAdmin(tA) ? -1 : tA.id - tB.id // colocar primero las tareas con novedades
             )
             .map((tarea) => <TareaCard key={tarea.id} tarea={tarea} />)
         ) : (

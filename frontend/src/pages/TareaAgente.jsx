@@ -49,7 +49,9 @@ export const TareaAgente = () => {
     try {
       const { data } = await api.get(`/tareas/${id}`);
       const notificacionPendiente = data.Notificacions?.find(
-        (n) => n.estado === "Pendiente" && n.titulo === "Cambio de plazo"
+        (n) =>
+          n.estado === "Pendiente" &&
+          (n.titulo === "Cambio de plazo" || n.titulo === "Nuevas revisiones")
       );
       if (notificacionPendiente) {
         setNotificacionPendiente(notificacionPendiente);
@@ -193,13 +195,25 @@ export const TareaAgente = () => {
     }
   };
 
-  const confirmarEntrega = async () => {
-    const notificacion = {
-      idNotificacion: tarea.Notificacions[0].id,
+  const confirmarNotificacionNuevasRevisiones = async () => {
+    const notificacion = tarea.Notificacions[0];
+    const body = {
+      idNotificacion: notificacion.id,
+      estado: "Aceptada",
+    };
+    await api.put(`/tareas/${id}/confirmarNotificacion`, body);
+    setNotificacionPendiente(false);
+  };
+
+  const confirmarNotificacionCambioPlazo = async () => {
+    const notificacion = tarea.Notificacions[0];
+
+    const body = {
+      idNotificacion: notificacion.id,
       estado: "Aceptada",
     };
     try {
-      await api.put(`/tareas/${id}/confirmarNotificacion`, notificacion);
+      await api.put(`/tareas/${id}/confirmarNotificacion`, body);
       const historial = {
         tipo: "Cambio de plazo",
         descripcion: "El agente aceptó el cambio de plazo",
@@ -336,19 +350,34 @@ export const TareaAgente = () => {
           onClose={() => setModalVisible(false)}
         />
       )}
-      {notificacionPendiente && (
-        <ModalNotificacion
-          visible={notificacionPendiente}
-          titulo={"Cambio de plazo"}
-          descripcion={`El plazo de entrega de la tarea ha sido modificado para el día ${format(
-            tarea.fecha_de_entrega,
-            "EEEE d 'de' MMMM",
-            { locale: es }
-          )}`}
-          onConfirm={confirmarEntrega}
-          onCancel={() => setNotificacionPendiente(false)}
-        />
-      )}
+
+      {/* Modal para "Nuevas revisiones" */}
+      {notificacionPendiente &&
+        notificacionPendiente.titulo === "Nuevas revisiones" && (
+          <ModalNotificacion
+            visible={notificacionPendiente}
+            titulo={notificacionPendiente.titulo}
+            descripcion="Los administradores agregaron revisiones a su tarea."
+            onConfirm={confirmarNotificacionNuevasRevisiones}
+            onCancel={() => setNotificacionPendiente(false)}
+          />
+        )}
+
+      {/* Modal para "Cambio de plazo" */}
+      {notificacionPendiente &&
+        notificacionPendiente.titulo === "Cambio de plazo" && (
+          <ModalNotificacion
+            visible={notificacionPendiente}
+            titulo={notificacionPendiente.titulo}
+            descripcion={`El plazo de entrega de la tarea ha sido modificado para el día ${format(
+              tarea.fecha_de_entrega,
+              "EEEE d 'de' MMMM",
+              { locale: es }
+            )}`}
+            onConfirm={confirmarNotificacionCambioPlazo}
+            onCancel={() => setNotificacionPendiente(false)}
+          />
+        )}
     </div>
   );
 };

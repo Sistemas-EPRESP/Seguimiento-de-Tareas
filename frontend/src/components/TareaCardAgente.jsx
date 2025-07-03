@@ -4,6 +4,10 @@ import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import { useNavigate } from "react-router-dom";
+import {
+  hayNotificacionesCambioPlazo,
+  hayNotificacionesPendientesParaPersonal,
+} from "../utils/notificacionesPendientes";
 
 export default function TareaCard({ tarea }) {
   const navigate = useNavigate();
@@ -25,12 +29,9 @@ export default function TareaCard({ tarea }) {
   };
 
   // Verificar si hay notificaciones pendientes del tipo "Cambio de plazo"
-  const hayNotificacionesCambioPlazo = tarea?.Notificacions?.some(
-    (notificacion) =>
-      notificacion.estado === "Pendiente" &&
-      notificacion.titulo === "Cambio de plazo"
-  );
-
+  const hayCambioPlazo = hayNotificacionesCambioPlazo(tarea);
+  const ultimaNotificacion =
+    tarea?.Notificacions[tarea.Notificacions.length - 1];
   return (
     <div
       className="mb-4 bg-gray-800 text-gray-100 rounded-lg shadow-lg p-4 hover:cursor-pointer"
@@ -39,11 +40,27 @@ export default function TareaCard({ tarea }) {
       <div className="flex justify-between items-start relative">
         <h2 className="text-xl font-semibold flex items-center">
           {tarea.nombre}
-          {hayNotificacionesCambioPlazo && (
+          {hayCambioPlazo && (
             <NotificationsActiveIcon
               className="ml-2 text-yellow-500"
               style={{ fontSize: "20px" }}
             />
+          )}
+          {hayNotificacionesPendientesParaPersonal(tarea) && (
+            <div
+              className={
+                hayNotificacionesPendientesParaPersonal(tarea) &&
+                "animate-pulse"
+              }
+            >
+              <NotificationsActiveIcon
+                className="ml-6 text-yellow-500"
+                style={{ fontSize: "20px" }}
+              />
+              <span className="text-sm ml-2 font-normal">
+                {ultimaNotificacion.titulo}
+              </span>
+            </div>
           )}
         </h2>
         <div className="flex space-x-2">

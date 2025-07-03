@@ -23,7 +23,7 @@ export default function ModalNotificacion({
             className="bg-blue-500 text-white py-2 px-4 rounded-xl hover:bg-blue-600"
             onClick={onConfirm}
           >
-            Confirmar
+            Entendido
           </button>
         </div>
       </div>

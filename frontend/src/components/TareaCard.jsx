@@ -2,10 +2,13 @@ import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import { useNavigate } from "react-router-dom";
 import Timeline from "./Timeline";
-import { hayNotificacionesPendientes } from "../utils/notificacionesPendientes";
+import { hayNotificacionesPendientesParaAdmin } from "../utils/notificacionesPendientes";
 
 export default function TareaCard({ tarea }) {
   const navigate = useNavigate();
+
+  const ultimaNotificacion =
+    tarea?.Notificacions[tarea.Notificacions.length - 1];
 
   const priorityColor = {
     Alta: "bg-[#EF4444] text-white",
@@ -31,16 +34,18 @@ export default function TareaCard({ tarea }) {
       <div className="flex justify-between items-start">
         <h2 className="text-xl font-semibold flex items-center">
           {tarea.nombre}
-          {hayNotificacionesPendientes(tarea) && (
+          {hayNotificacionesPendientesParaAdmin(tarea) && (
             <div
-              className={hayNotificacionesPendientes(tarea) && "animate-pulse"}
+              className={
+                hayNotificacionesPendientesParaAdmin(tarea) && "animate-pulse"
+              }
             >
               <NotificationsActiveIcon
                 className="ml-6 text-yellow-500"
                 style={{ fontSize: "20px" }}
               />
               <span className="text-sm ml-2 font-normal">
-                {tarea?.Notificacions[0]?.titulo}
+                {ultimaNotificacion.titulo}
               </span>
             </div>
           )}

@@ -1,5 +1,6 @@
-const Revision = require('../models/Revision');
-const Correccion = require('../models/Correccion');
+const Revision = require("../models/Revision");
+const Correccion = require("../models/Correccion");
+const Notificacion = require("../models/Notificacion");
 
 // Obtener revisiones asociadas a una tarea, incluyendo sus correcciones
 exports.getRevisionesPorTarea = async (tareaId) => {
@@ -35,13 +36,21 @@ exports.createRevision = async (tareaId, fecha_hora, correcciones) => {
       }
     }
 
+    // Crear notificación
+    await Notificacion.create({
+      titulo: "Nuevas revisiones",
+      mensaje: "Se han agregado revisiones a su tarea.",
+      estado: "Pendiente",
+      tareaId,
+    });
+
     // Comprobar y actualizar el estado de la revisión
     await checkAndUpdateRevisionStatus(nuevaRevision.id);
 
     // Retornar la revisión con las posibles correcciones asociadas
     return nuevaRevision;
   } catch (error) {
-    console.error('Error al crear la revisión y correcciones:', error);
+    console.error("Error al crear la revisión y correcciones:", error);
     throw error; // Lanza el error para que sea capturado por el controlador
   }
 };
@@ -79,9 +88,17 @@ const checkAndUpdateRevisionStatus = async (revisionId) => {
 
 exports.calcularRevisiones = (tareas) => {
   const tiposDeCorreccion = [
-    'Ortografía', 'Formato', 'Contenido', 'Modificación de contenido', 'Redacción',
-    'Citas incorrectas', 'No corresponde a lo solicitado', 'Información incorrecta',
-    'Error de calculo', 'Tarea incompleta', 'Falta de documentación adjunta'
+    "Ortografía",
+    "Formato",
+    "Contenido",
+    "Modificación de contenido",
+    "Redacción",
+    "Citas incorrectas",
+    "No corresponde a lo solicitado",
+    "Información incorrecta",
+    "Error de calculo",
+    "Tarea incompleta",
+    "Falta de documentación adjunta",
   ];
 
   const correccionesContador = tiposDeCorreccion.reduce((acc, tipo) => {
@@ -89,9 +106,9 @@ exports.calcularRevisiones = (tareas) => {
     return acc;
   }, {});
 
-  tareas.forEach(tarea => {
-    tarea.Revisions.forEach(revision => {
-      revision.Correccions.forEach(correccion => {
+  tareas.forEach((tarea) => {
+    tarea.Revisions.forEach((revision) => {
+      revision.Correccions.forEach((correccion) => {
         if (correccionesContador.hasOwnProperty(correccion.tipo)) {
           correccionesContador[correccion.tipo]++;
         }
@@ -100,4 +117,4 @@ exports.calcularRevisiones = (tareas) => {
   });
 
   return correccionesContador;
-}
+};
