@@ -3,16 +3,12 @@ import { useEffect, useState, useCallback, useReducer } from "react";
 import { api } from "../../api/api";
 import Loading from "../../layout/Loading";
 
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-
 import RevisionesAgente from "../../components/RevisionesAgente";
-import ModalInformativo from "../../layout/ModalInformativo";
-import ModalNotificacion from "../../layout/ModalNotificacion";
 import { tareaAgenteReducer, initialState } from "./tareaAgenteReducer";
 import MainInfo from "./MainInfo";
 import Description from "./Description";
 import TareaActions from "./TareaActions";
+import Modals from "./Modals";
 
 export const TareaAgente = () => {
   const { id } = useParams();
@@ -80,38 +76,6 @@ export const TareaAgente = () => {
     return tarea.estado === "Sin comenzar";
   };
 
-  const confirmarNotificacionNuevasRevisiones = async () => {
-    const notificacion = state.tarea.Notificacions[0];
-    const body = {
-      idNotificacion: notificacion.id,
-      estado: "Aceptada",
-    };
-    await api.put(`/tareas/${id}/confirmarNotificacion`, body);
-    dispatch({ type: "CERRAR_NOTIFICACION" });
-  };
-
-  const confirmarNotificacionCambioPlazo = async () => {
-    const notificacion = state.tarea.Notificacions[0];
-
-    const body = {
-      idNotificacion: notificacion.id,
-      estado: "Aceptada",
-    };
-    try {
-      await api.put(`/tareas/${id}/confirmarNotificacion`, body);
-      const historial = {
-        tipo: "Cambio de plazo",
-        descripcion: "El agente aceptó el cambio de plazo",
-      };
-      await api.post(`/tareas/${id}/historial`, historial);
-      setActualizarTarea((prev) => !prev);
-      dispatch({ type: "EXITO_CONFIRMAR_CAMBIO_PLAZO" });
-    } catch (error) {
-      console.error(error);
-      dispatch({ type: "ERROR_CONFIRMAR_CAMBIO_PLAZO" });
-    }
-  };
-
   const handleCorreccionesEnviadas = () => {
     fetchTareaData();
   };
@@ -136,40 +100,11 @@ export const TareaAgente = () => {
         onCorreccionesEnviadas={handleCorreccionesEnviadas}
       />
 
-      {state.modalVisible && (
-        <ModalInformativo
-          modalInfo={state.modalInfo}
-          onClose={() => dispatch({ type: "CERRAR_MODAL" })}
-        />
-      )}
-
-      {/* Modal para "Nuevas revisiones" */}
-      {state.notificacionPendiente &&
-        state.notificacionPendiente.titulo === "Nuevas revisiones" && (
-          <ModalNotificacion
-            visible={state.notificacionPendiente}
-            titulo={state.notificacionPendiente.titulo}
-            descripcion="Los administradores agregaron revisiones a su tarea."
-            onConfirm={confirmarNotificacionNuevasRevisiones}
-            onCancel={() => dispatch({ type: "CERRAR_NOTIFICACION" })}
-          />
-        )}
-
-      {/* Modal para "Cambio de plazo" */}
-      {state.notificacionPendiente &&
-        state.notificacionPendiente.titulo === "Cambio de plazo" && (
-          <ModalNotificacion
-            visible={state.notificacionPendiente}
-            titulo={state.notificacionPendiente.titulo}
-            descripcion={`El plazo de entrega de la tarea ha sido modificado para el día ${format(
-              state.tarea.fecha_de_entrega,
-              "EEEE d 'de' MMMM",
-              { locale: es }
-            )}`}
-            onConfirm={confirmarNotificacionCambioPlazo}
-            onCancel={() => dispatch({ type: "CERRAR_NOTIFICACION" })}
-          />
-        )}
+      <Modals
+        state={state}
+        dispatch={dispatch}
+        setActualizarTarea={setActualizarTarea}
+      />
     </div>
   );
 };
