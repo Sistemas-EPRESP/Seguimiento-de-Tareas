@@ -2,9 +2,13 @@ import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import { useNavigate } from "react-router-dom";
 import Timeline from "./Timeline";
+import { hayNotificacionesPendientesParaAdmin } from "../utils/notificacionesPendientes";
 
 export default function TareaCard({ tarea }) {
   const navigate = useNavigate();
+
+  const ultimaNotificacion =
+    tarea?.Notificacions[tarea.Notificacions.length - 1];
 
   const priorityColor = {
     Alta: "bg-[#EF4444] text-white",
@@ -22,23 +26,28 @@ export default function TareaCard({ tarea }) {
     Finalizado: "bg-[#10B981] text-white",
   };
 
-  const hayNotificacionesPendientes = tarea?.Notificacions?.some(
-    (notificacion) => notificacion.estado === "Pendiente"
-  );
-
   return (
     <div
-      className="mb-4 bg-gray-800 text-gray-100 rounded-lg shadow-lg p-4 hover:cursor-pointer"
+      className={`mb-4 bg-gray-800 text-gray-100 rounded-lg shadow-lg p-4 hover:cursor-pointer`}
       onClick={() => navigate(`/tarea/${tarea.id}`)}
     >
       <div className="flex justify-between items-start">
         <h2 className="text-xl font-semibold flex items-center">
           {tarea.nombre}
-          {hayNotificacionesPendientes && (
-            <NotificationsActiveIcon
-              className="ml-2 text-yellow-500"
-              style={{ fontSize: "20px" }}
-            />
+          {hayNotificacionesPendientesParaAdmin(tarea) && (
+            <div
+              className={
+                hayNotificacionesPendientesParaAdmin(tarea) && "animate-pulse"
+              }
+            >
+              <NotificationsActiveIcon
+                className="ml-6 text-yellow-500"
+                style={{ fontSize: "20px" }}
+              />
+              <span className="text-sm ml-2 font-normal">
+                {ultimaNotificacion.titulo}
+              </span>
+            </div>
           )}
         </h2>
         <div className="flex space-x-2">

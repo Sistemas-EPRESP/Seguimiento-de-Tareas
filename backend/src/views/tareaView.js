@@ -230,7 +230,7 @@ exports.getTareasIncompletasPorAgente = async (agenteId) => {
   let data;
   const idAgente = parseInt(agenteId);
   if (idAgente === -1) {
-    // Si agenteId es 0, obtenemos todas las tareas incompletas sin filtrar por agente
+    // Si agenteId es -1, obtenemos todas las tareas incompletas sin filtrar por agente
     data = await Tarea.findAll({
       where: {
         estado: {
@@ -243,10 +243,14 @@ exports.getTareasIncompletasPorAgente = async (agenteId) => {
           through: { attributes: [] },
           attributes: ["nombre", "apellido"],
         },
+        {
+          model: Notificacion,
+          attributes: ["id", "titulo", "estado"],
+        },
       ],
     });
   } else {
-    // Si agenteId no es 0, filtramos por el ID del agente
+    // Si agenteId no es -1, filtramos por el ID del agente
     data = await Tarea.findAll({
       where: {
         estado: {
@@ -259,6 +263,10 @@ exports.getTareasIncompletasPorAgente = async (agenteId) => {
           where: { id: idAgente }, // Filtra por el ID del agente logueado
           through: { attributes: [] },
           attributes: ["nombre", "apellido"],
+        },
+        {
+          model: Notificacion,
+          attributes: ["id", "titulo", "estado"],
         },
       ],
     });

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
+import { api } from "../api/api";
 import Loading from "../layout/Loading";
-import axios from "axios";
-import config from "../api/config.js"; // Importa la configuración de la API
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import ReportesCard from "../components/ReportesCard";
@@ -11,6 +10,7 @@ export default function Reportes() {
   const [loading, setLoading] = useState(false);
   const [reportes, setReportes] = useState(null);
   const [vencimientos, setVencimientos] = useState(null);
+  const [tareasEstados, setTareasEstados] = useState(null);
 
   const obtenerAgentes = async () => {
     setLoading(true);
@@ -21,11 +21,7 @@ export default function Reportes() {
     }
 
     try {
-      const { data } = await axios.get(`${config.apiUrl}/agentes`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const { data } = await api.get(`/agentes`);
       setAgentes(data); // Guardamos los agentes en el state
     } catch (error) {
       console.error("Error al obtener los agentes", error);
@@ -44,39 +40,33 @@ export default function Reportes() {
     }),
     onSubmit: async (values) => {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No hay token disponible");
-        return;
-      }
-
       try {
-        const { data } = await axios.get(`${config.apiUrl}/reportes`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const { data } = await api.get(`/reportes`, {
           params: {
             agente: values.agenteSeleccionado || "todos",
             periodo: values.periodoSeleccionado,
           },
         });
-        const response = await axios.get(
-          `${config.apiUrl}/reportes/vencimientos`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            params: {
-              agente: values.agenteSeleccionado || "todos",
-              periodo: values.periodoSeleccionado,
-            },
-          }
-        );
+        const response = await api.get(`/reportes/tareasEstados`, {
+          params: {
+            agente: values.agenteSeleccionado || "todos",
+            periodo: values.periodoSeleccionado,
+          },
+        });
+
+        const vencimientosResponse = await api.get(`/reportes/vencimientos`, {
+          params: {
+            agente: values.agenteSeleccionado || "todos",
+            periodo: values.periodoSeleccionado,
+          },
+        });
+
         console.log(response.data);
         console.log(data);
 
         setReportes(data); // Guardamos las tareas en el state
-        setVencimientos(response.data);
+        setVencimientos(vencimientosResponse.data);
+        setTareasEstados(response.data);
       } catch (error) {
         console.error("Error al generar el reporte", error);
       } finally {
@@ -140,7 +130,11 @@ export default function Reportes() {
       ) : null}
       <Loading isVisible={loading} />
       {reportes && (
-        <ReportesCard reportes={reportes} vencimientos={vencimientos} />
+        <ReportesCard
+          reportes={reportes}
+          tareasEstados={tareasEstados}
+          vencimientos={vencimientos}
+        />
       )}
     </div>
   );

@@ -1,0 +1,22 @@
+[
+    {
+        "label": "Inicio",
+        "to": "/",
+        "adminOnly": false
+    },
+    {
+        "label": "Crear tarea",
+        "to": "/crear-tarea",
+        "adminOnly": true
+    },
+    {
+        "label": "Buscar",
+        "to": "/buscar",
+        "adminOnly": true
+    },
+    {
+        "label": "Mis tareas",
+        "to": "/mis-tareas",
+        "adminOnly": false
+    }
+]

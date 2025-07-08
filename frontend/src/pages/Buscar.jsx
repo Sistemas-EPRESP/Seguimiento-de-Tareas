@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import axios from "axios";
-import config from "../api/config";
+import { api } from "../api/api";
 import "react-datepicker/dist/react-datepicker.css";
 import Filtro from "../layout/Filtro";
 import TareaCard from "../components/TareaCard";
@@ -18,13 +17,8 @@ export default function Tareas() {
 
   useEffect(() => {
     const obtenerAgentes = async () => {
-      const token = localStorage.getItem("token"); // Obtener el token del almacenamiento local
       try {
-        const { data } = await axios.get(`${config.apiUrl}/agentes`, {
-          headers: {
-            Authorization: `Bearer ${token}`, // Incluir el token en el encabezado
-          },
-        });
+        const { data } = await api.get(`/agentes`);
         setAgentes(data);
       } catch (error) {
         console.error("Error al obtener los agentes", error);
@@ -63,14 +57,8 @@ export default function Tareas() {
 
   const handleBuscar = async () => {
     setLoadingOpen(true);
-    const token = localStorage.getItem("token"); // Obtener el token del almacenamiento local
     try {
-      const { data } = await axios.get(`${config.apiUrl}/tareas/buscar`, {
-        params: { q: query },
-        headers: {
-          Authorization: `Bearer ${token}`, // Incluir el token en el encabezado
-        },
-      });
+      const { data } = await api.get(`/tareas/buscar`);
       await sleep(2000);
       setLoadingOpen(false);
 

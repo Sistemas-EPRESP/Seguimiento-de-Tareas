@@ -52,22 +52,24 @@ export default function TareaHistorial({ historial, tiempos, estadoActual }) {
           </h2>
         </div>
         <div className="space-y-4 max-h-[400px] overflow-y-auto pr-4">
-          {historial.map((movimiento) => (
-            <div
-              key={movimiento.id}
-              className="flex items-start gap-4 text-gray-300"
-            >
-              <div className="min-w-[140px] text-sm">
-                {formatFecha(movimiento.fecha)}
+          {historial
+            .sort((a, b) => -a.id + b.id)
+            .map((movimiento) => (
+              <div
+                key={movimiento.id}
+                className="flex items-start gap-4 text-gray-300"
+              >
+                <div className="min-w-[140px] text-sm">
+                  {formatFecha(movimiento.fecha)}
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-100">
+                    {movimiento.tipo}
+                  </span>
+                  <span className="text-sm">{movimiento.descripcion}</span>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="font-medium text-gray-100">
-                  {movimiento.tipo}
-                </span>
-                <span className="text-sm">{movimiento.descripcion}</span>
-              </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
 

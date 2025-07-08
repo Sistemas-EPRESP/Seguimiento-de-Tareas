@@ -1,74 +1,27 @@
-import { useEffect, useState, useCallback, useContext } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { isToday, isThisWeek, parseISO, isFuture, addDays } from "date-fns";
+//import { isToday, isThisWeek, parseISO, isFuture, addDays } from "date-fns";
 import TareaCard from "../components/TareaCard.jsx";
 import Filtro from "../layout/Filtro.jsx";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import axios from "axios";
-import config from "../api/config.js"; // Importa la configuración de la API
-import { AuthContext } from "../context/AuthContext";
+import useAgentes from "../hooks/useAgentes.js";
+import useTareas from "../hooks/useTareas.js";
+import { hayNotificacionesPendientesParaAdmin } from "../utils/notificacionesPendientes.js";
+
+const ALL_UNFINISHED_TASKS = -1;
 
 export default function Inicio() {
   const navigate = useNavigate();
-  const { usuario } = useContext(AuthContext);
-  const [tareas, setTareas] = useState([]);
-  const [agentes, setAgentes] = useState([]); // Ahora usamos este state para el filtro de agentes
-  const [todayTasks, setTodayTasks] = useState([]);
-  const [weekTasks, setWeekTasks] = useState([]);
-  const [futureTasks, setFutureTasks] = useState([]);
+  //const [todayTasks, setTodayTasks] = useState([]);
+  //const [weekTasks, setWeekTasks] = useState([]);
+  //const [futureTasks, setFutureTasks] = useState([]);
   const [prioridadFiltro, setPrioridadFiltro] = useState("");
   const [agenteFiltro, setAgenteFiltro] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("");
 
-  const obtenerAgentes = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.error("No hay token disponible");
-      return;
-    }
-
-    try {
-      const { data } = await axios.get(`${config.apiUrl}/agentes`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setAgentes(data); // Guardamos los agentes en el state
-    } catch (error) {
-      console.error("Error al obtener los agentes", error);
-    }
-  };
-
-  const obtenerTareas = async () => {
-    const token = localStorage.getItem("token");
-    const idAgente = -1; // Obtienes el ID del agente
-
-    if (!token) {
-      console.error("No hay token disponible");
-      return;
-    }
-    const today = new Date();
-    const oneWeekFromNow = new Date(today);
-    oneWeekFromNow.setDate(today.getDate() + 7);
-
-    try {
-      // Pasamos el ID como query string
-      const { data } = await axios.get(`${config.apiUrl}/tareas/incompletas`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        params: {
-          idAgente, // Esto será enviado como ?idAgente=valor
-        },
-      });
-      setTareas(data);
-    } catch (error) {
-      console.error(
-        "Error al obtener las tareas",
-        error.response?.data || error
-      );
-    }
-  };
+  const { agentes, loadingAgentes, errorAgentes } = useAgentes();
+  const { tareas, loadingTareas, errorTareas } =
+    useTareas(ALL_UNFINISHED_TASKS);
 
   const filtrarTareas = useCallback(
     (tarea) => {
@@ -87,16 +40,27 @@ export default function Inicio() {
     [prioridadFiltro, agenteFiltro, estadoFiltro]
   );
 
-  useEffect(() => {
-    obtenerTareas();
-    obtenerAgentes(); // Llamamos a la función para obtener los agentes
-  }, []);
+  if (errorAgentes)
+    return (
+      <>
+        <h1>Se produjo un error en la carga de agentes</h1>
+        <p>{errorAgentes.message}</p>
+      </>
+    );
+
+  if (errorTareas)
+    return (
+      <>
+        <h1>Se produjo un error en la carga de tareas</h1>
+        <p>{errorAgentes.message}</p>
+      </>
+    );
 
   return (
     <div className="container mx-auto px-1">
       <div className="flex flex-col items-end md:flex-row justify-between  md:items-center border-b-2 border-b-slate-500 mb-4 pb-4">
         <h1 className="text-xl md:text-3xl font-semibold mb-4 md:mb-0">
-          Hola {usuario?.agente?.nombre} {usuario?.agente?.apellido}!
+          Sistema de Seguimiento de Tareas
         </h1>
         <div className="flex flex-row md:gap-0 gap-1 md:flex-row space-y-2 md:space-y-0 md:space-x-4">
           <h2 className="flex items-center">Filtrar por: </h2>
@@ -108,11 +72,17 @@ export default function Inicio() {
             selectClassName="w-full px-3 py-2 bg-gray-800 text-white rounded-lg focus:outline-none"
           />
           <Filtro
-            opciones={[
-              ...new Set(
-                agentes.map((agente) => `${agente.nombre} ${agente.apellido}`) // Retorna solo la cadena de nombre completo
-              ),
-            ]}
+            opciones={
+              loadingAgentes
+                ? []
+                : [
+                    ...new Set(
+                      agentes.map(
+                        (agente) => `${agente.nombre} ${agente.apellido}`
+                      ) // Retorna solo la cadena de nombre completo
+                    ),
+                  ]
+            }
             onChange={(value) => setAgenteFiltro(value)}
             placeHolder={"Agentes"}
             selectClassName="w-full px-3 py-2 bg-gray-800 text-gray-100 rounded-lg focus:outline-none"
@@ -134,9 +104,13 @@ export default function Inicio() {
       </div>
       <h1 className="text-3xl mb-6">Tareas activas</h1>
       <ul className="mb-8">
-        {tareas.length > 0 ? (
+        {!loadingTareas && tareas.length > 0 ? (
           tareas
             .filter(filtrarTareas)
+            .sort(
+              (tA, tB) =>
+                hayNotificacionesPendientesParaAdmin(tA) ? -1 : tA.id - tB.id // colocar primero las tareas con novedades
+            )
             .map((tarea) => <TareaCard key={tarea.id} tarea={tarea} />)
         ) : (
           <p className="text-gray-500 mb-8">No hay tareas disponibles.</p>

@@ -1,17 +1,14 @@
 import { useEffect, useState, useCallback, useContext } from "react";
-import { isToday, isThisWeek, parseISO, isFuture, addDays } from "date-fns";
+("date-fns");
 import Filtro from "../layout/Filtro.jsx";
-import axios from "axios";
-import config from "../api/config.js";
+import { api } from "../api/api.js";
 import { AuthContext } from "../context/AuthContext";
 import Loading from "../layout/Loading.jsx";
 import TareaCardAgente from "../components/TareaCardAgente.jsx";
+import { hayNotificacionesPendientesParaPersonal } from "../utils/notificacionesPendientes.js";
 
 export default function Inicio() {
   const { usuario } = useContext(AuthContext);
-  const [todayTasks, setTodayTasks] = useState([]);
-  const [weekTasks, setWeekTasks] = useState([]);
-  const [futureTasks, setFutureTasks] = useState([]);
   const [prioridadFiltro, setPrioridadFiltro] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("");
   const [tareas, setTareas] = useState([]);
@@ -30,21 +27,16 @@ export default function Inicio() {
   useEffect(() => {
     const fetchTareas = async () => {
       setCargando(true);
-      const token = localStorage.getItem("token");
       const userId = localStorage.getItem("userId");
 
       try {
-        const { data } = await axios.get(
-          `${config.apiUrl}/tareas/incompletas`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            params: {
-              idAgente: userId, // Esto será enviado como ?idAgente=valor
-            },
-          }
-        );
+        const { data } = await api.get(`/tareas/incompletas`, {
+          params: {
+            idAgente: userId, // Esto será enviado como ?idAgente=valor
+          },
+        });
+        console.log(data);
+
         setTareas(data);
       } catch (error) {
         console.error("Error al obtener las tareas", error);
@@ -60,7 +52,7 @@ export default function Inicio() {
     <div className="container mx-auto px-1">
       <div className="flex flex-col items-end md:flex-row justify-between  md:items-center border-b-2 border-b-slate-500 mb-4 pb-4">
         <h1 className="text-xl md:text-3xl font-semibold mb-4 md:mb-0">
-          Hola {usuario?.agente?.nombre} {usuario?.agente?.apellido}!
+          Sistema de Seguimiento de Tareas
         </h1>
         <div className="flex flex-row md:gap-0 gap-2 md:flex-row space-y-2 md:space-y-0 md:space-x-4">
           <h2 className="flex items-center">Filtrar por: </h2>
@@ -94,6 +86,12 @@ export default function Inicio() {
           {tareas.length > 0 ? (
             tareas
               .filter(filtrarTareas)
+              .sort(
+                (tA, tB) =>
+                  hayNotificacionesPendientesParaPersonal(tA)
+                    ? -1
+                    : tA.id - tB.id // colocar primero las tareas con novedades
+              )
               .map((tarea) => <TareaCardAgente key={tarea.id} tarea={tarea} />)
           ) : (
             <p className="text-gray-500 mb-8">No hay tareas disponibles.</p>

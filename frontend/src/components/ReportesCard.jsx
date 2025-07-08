@@ -2,7 +2,11 @@ import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 
-export default function ReportesCard({ reportes, vencimientos }) {
+export default function ReportesCard({
+  reportes,
+  tareasEstados,
+  vencimientos,
+}) {
   const categoriasCorrecciones =
     reportes.length > 0 ? Object.keys(reportes[0].Correcciones) : [];
 
@@ -109,23 +113,19 @@ export default function ReportesCard({ reportes, vencimientos }) {
           </h4>
           <p className="text-xl font-bold text-white">{reportes.length}</p>
         </div>
-
-        {/* Tareas por Estado */}
         <div className="w-1/4 bg-gray-800 p-4 shadow-md rounded-lg">
           <h4 className="text-lg font-semibold text-gray-300">
             Tareas por Estado
           </h4>
-          <div className="flex justify-between mt-2">
-            <p className="text-gray-300">En progreso:</p>
-            <p className="font-semibold text-white">
-              {vencimientos.tareasActivas.length}
-            </p>
-          </div>
-          <div className="flex justify-between mt-1">
-            <p className="text-gray-300">Completadas:</p>
-            <p className="font-semibold text-white">
-              {vencimientos.tareasCompletadas.length}
-            </p>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.keys(tareasEstados).map((estado) => (
+              <div key={estado} className="flex justify-between">
+                <p className="text-gray-300">{estado}:</p>
+                <p className="font-semibold text-white">
+                  {tareasEstados[estado].length}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -134,18 +134,7 @@ export default function ReportesCard({ reportes, vencimientos }) {
           <h4 className="text-lg font-semibold text-gray-300">
             Tareas vencidas
           </h4>
-          <p className="text-2xl font-bold text-white">
-            {vencimientos.tareasVencidas.length}
-          </p>
-        </div>
-
-        <div className="w-1/4 bg-gray-800 p-4 shadow-md rounded-lg">
-          <h4 className="text-lg font-semibold text-gray-300">
-            Tareas futuras
-          </h4>
-          <p className="text-2xl font-bold text-white">
-            {vencimientos.tareasFuturas.length}
-          </p>
+          <p className="text-2xl font-bold text-white">{vencimientos.length}</p>
         </div>
       </div>
 

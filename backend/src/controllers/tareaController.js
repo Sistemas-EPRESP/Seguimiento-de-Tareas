@@ -81,7 +81,7 @@ exports.createTarea = async (req, res) => {
       "Crear tarea",
       `Tarea creada con estado inicial Sin Comenzar`
     );
-    res.status(201).json(nuevaTarea);
+    res.status(201).json({ id: nuevaTarea.id });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -346,7 +346,7 @@ const registrarMovimiento = async (tareaId, tipo, descripcion) => {
     });
   } catch (error) {
     console.error("Error al registrar movimiento:", error);
-    throw error;
+    return { message: "Error al registrar un movimiento" };
   }
 };
 

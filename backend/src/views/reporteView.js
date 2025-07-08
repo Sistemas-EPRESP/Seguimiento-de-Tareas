@@ -23,70 +23,49 @@ exports.generarReporte = (tareas) => {
   });
 };
 
-const getTareasVencidas = (tareas) => {
-  const now = new Date();
-  return tareas.filter(
-    (tarea) =>
-      (tarea.estado !== "Finalizado" &&
-        new Date(tarea.fecha_vencimiento) < now) ||
-      ((tarea.estado === "Sin comenzar" || tarea.estado === "Curso") &&
-        new Date(tarea.fecha_de_entrega) < now) ||
-      (tarea.estado === "Correcciones" && new Date(tarea.fecha_limite) < now)
-  );
-};
+const agruparTareasPorEstado = (tareas) => {
+  const estados = [
+    "Sin comenzar",
+    "Curso",
+    "Revisión",
+    "Corrección",
+    "Bloqueada",
+    "Finalizado",
+  ];
+  const tareasPorEstado = estados.reduce((acc, estado) => {
+    acc[estado] = [];
+    return acc;
+  }, {});
 
-const getTareasActivas = (tareas) => {
-  const now = new Date();
-  return tareas.filter(
-    (tarea) =>
-      (tarea.estado === "Curso" && new Date(tarea.fecha_de_entrega) >= now) ||
-      ((tarea.estado === "Revision" || tarea.estado === "Correcciones") &&
-        new Date(tarea.fecha_limite) >= now)
-  );
-};
+  tareas.forEach((tarea) => {
+    if (tareasPorEstado[tarea.estado]) {
+      tareasPorEstado[tarea.estado].push(tarea);
+    }
+  });
 
-const getTareasFuturas = (tareas) => {
-  const now = new Date();
-  return tareas.filter(
-    (tarea) =>
-      (tarea.estado === "Sin comenzar" || tarea.estado === "Bloqueada") &&
-      new Date(tarea.fecha_inicio) > now
-  );
-};
-
-const getTareasCompletadas = (tareas) => {
-  return tareas.filter((tarea) => tarea.estado === "Finalizado");
+  return tareasPorEstado;
 };
 
 exports.clasificarTareas = (tareas) => {
-  return {
-    tareasVencidas: getTareasVencidas(tareas),
-    tareasActivas: getTareasActivas(tareas),
-    tareasFuturas: getTareasFuturas(tareas),
-    tareasCompletadas: getTareasCompletadas(tareas),
-  };
+  return agruparTareasPorEstado(tareas);
 };
 
-// const getTareasCompletadas = (tareas) => {
-//   return tareas.filter(tarea => tarea.estado === 'Finalizado').length;
-// }
+exports.getTareasVencidas = (tareas) => {
+  const now = new Date();
+  return tareas.filter((tarea) => {
+    const fechaEntrega = new Date(tarea.fecha_de_entrega);
 
-// const getTareasSinFinalizar = (tareas) => {
-//   return tareas.filter(tarea => tarea.estado !== 'Finalizado').length;
-// }
+    const finalizacionMovimiento = tarea.HistorialMovimientos.find(
+      (movimiento) => movimiento.tipo === "Finalización"
+    );
 
-// const getTareasIncompletas = (tareas) => {
-//   const now = new Date();
-//   return tareas.filter(tarea =>
-//     (tarea.estado === 'Sin comenzar' || tarea.estado === 'Curso') &&
-//     new Date(tarea.fecha_vencimiento) < now
-//   ).length;
-// }
+    const fechaFinalizacion = finalizacionMovimiento
+      ? new Date(finalizacionMovimiento.fecha)
+      : null;
 
-// const getReporteRevisiones = (tareas) => {
-//   const correccionesContador = RevisionView.calcularRevisiones(tareas);
-//   return Object.entries(correccionesContador).map(([tipo, cantidad]) => ({
-//     tipo,
-//     cantidad
-//   }));
-// }
+    return (
+      (tarea.estado !== "Finalizado" && fechaEntrega < now) ||
+      (fechaFinalizacion && fechaFinalizacion > fechaEntrega)
+    );
+  });
+};

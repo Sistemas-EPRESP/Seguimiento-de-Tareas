@@ -6,7 +6,7 @@ import Select from "../components/Select";
 import DatePicker from "react-datepicker";
 import { es } from "date-fns/locale";
 import "react-datepicker/dist/react-datepicker.css";
-import axios from "axios";
+import { api } from "../api/api.js";
 import config from "../api/config.js";
 import ModalInformativo from "../layout/ModalInformativo";
 import Loading from "../layout/Loading";
@@ -24,22 +24,19 @@ export default function CrearTareas() {
   const [modalVisible, setModalVisible] = useState(false);
   const [loadingOpen, setLoadingOpen] = useState(false);
   const [agentesSeleccionados, setAgentesSeleccionados] = useState([]);
-  const token = localStorage.getItem("token");
   const [hayAgentes, setHayAgentes] = useState(false);
 
   useEffect(() => {
     const obtenerAgentes = async () => {
       try {
-        const { data } = await axios.get(`${config.apiUrl}/agentes`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const { data } = await api.get(`/agentes`);
         setAgentes(data);
       } catch (error) {
         console.error("Error al obtener los agentes", error);
       }
     };
     obtenerAgentes();
-  }, [token]);
+  }, []);
 
   const handleAgregarAgente = (e) => {
     const agenteId = parseInt(e.target.value);
@@ -118,14 +115,13 @@ export default function CrearTareas() {
       };
 
       try {
-        await axios.post(`${config.apiUrl}/tareas`, formattedData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.post(`/tareas`, formattedData);
         setModalInfo({
           tipo: "Exito",
           titulo: "Tarea Creada",
           mensaje: "¡Tarea creada con éxito!",
         });
+        navigate("/tarea/" + res.data.id);
       } catch (error) {
         console.log(error);
 
